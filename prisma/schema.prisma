@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userType UserType
+  role     Role
+
+  firstName     String
+  lastName      String?
+  email         String? @unique
+  contactNumber String? @unique
+  gender        Gender?
+
+  // Shared address fields (for both app users & employees)
+  address String?
+  country String?
+  state   String?
+  city    String?
+
+  password String // nullable if OTP/OAuth
+  isActive Boolean @default(true)
+
+  // Relations
+  employeeProfile EmployeeProfile?
+
+  @@index([role])
+  @@index([userType])
+}
+
+model EmployeeProfile {
+  id                       Int       @id @default(autoincrement())
+  userId                   Int       @unique
+  empCode                  String?
+  dateOfBirth              DateTime?
+  joiningDate              DateTime?
+  shift                    Shift?
+  emergencyContactName     String?
+  emergencyContactRelation String?
+  emergencyContactNumber   String?
+  bankName                 String?
+  bankAccountNumber        String?
+  bankIfscCode             String?
+  bankBranch               String?
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([empCode])
+}
+
+enum UserType {
+  APP_USER
+  ERP_USER
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum Shift {
+  MORNING
+  EVENING
+  NIGHT
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+  USER
+}
+
+enum ContactType {
+  CUSTOMER
+  SUPPLIER
+  VENDOR
+  OTHER
+}
+
+// model Product {
+//   id            Int         @id @default(autoincrement())
+//   itemCode      String      @unique
+//   productName   String
+//   printName     String?
+//   productType   ProductType
+//   categoryId    Int
+//   category      Category    @relation(fields: [categoryId], references: [id])
+//   subCategoryId 
+//   description   String?
+//   shortDesc     String?
+//   slug          String?     @unique // optional, only if e-commerce needed
+
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+
+// enum ProductType {
+//   SINGLE
+//   VARIANT
+// }
+
+// enum ExpiryCalcType {
+//   MFG
+//   PURCHASE
+// }
