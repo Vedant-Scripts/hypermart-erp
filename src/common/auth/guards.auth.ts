@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { verifyToken } from "./index.js";
-import config from "../../config/index.js";
+import config from "../../config/env.config.js";
 
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
