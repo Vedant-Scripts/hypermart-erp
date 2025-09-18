@@ -11,7 +11,13 @@ async function seed() {
             email: 'admin@admin.com',
             role: 'ADMIN',
             userType: 'ERP_USER',
-            password: ''
+            password: '$2a$10$rvMm.jEUPVQT18Oi4bth6uL35M/YFPNQTBsKx9041dj7yLWPA0UP2',
+            gender: 'MALE',
+            address: 'Basketfull, broadway empire',
+            country: 'India',
+            state: 'Gujarat',
+            city: 'Vadodara',
+            isActive: true
         }
     });
     console.log('Seed completed');
