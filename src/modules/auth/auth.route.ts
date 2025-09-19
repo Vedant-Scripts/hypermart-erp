@@ -10,7 +10,7 @@ router.post('/login', signInController);
 
 router.post('/refresh-token', refreshTokenController);
 
-router.post('/forgot-password', forgotPasswordController);
+router.post('/forgot-password', forgotPasswordController);      // needs email to do it
 
 router.patch('/change-password', authenticate, changePassword);
 

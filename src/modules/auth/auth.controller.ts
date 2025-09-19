@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { changePasswordSchema, forgotPasswordSchema, resetPasswordSchema, signInSchema, type ChangePasswordReqType, type ResetPasswordReqType, type SignInReqType } from "./auth.validation.js";
-import { changePasswordService, refreshTokenService, resetPasswordService, signInService } from "./auth.service.js";
+import { changePasswordService, refreshTokenService, resetPasswordService, setRefreshCookieService, signInService } from "./auth.service.js";
 
 export const signInController = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -11,7 +11,14 @@ export const signInController = async (req: Request, res: Response, next: NextFu
         }
         const signServiceInput: SignInReqType = parsed.data;
         const result = await signInService(signServiceInput);
-        res.status(200).json({ message: 'Login Successfull', data: result });
+        setRefreshCookieService(res, result.refreshToken);
+        res.status(200).json({
+            message: 'Login Successfull',
+            data: {
+                accessToken: result.accessToken,
+                accessTokenExpiresIn: result.accessTokenExpiresIn
+            },
+        });
     } catch (error) {
         next(error);
     }
@@ -19,11 +26,17 @@ export const signInController = async (req: Request, res: Response, next: NextFu
 
 export const refreshTokenController = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const authHeader = req.headers.authorization || "";
-        const token = authHeader.replace(/^Bearer\s/i, "");
+        const token = req.cookies.refreshToken;
         if (!token) return res.status(401).json({ error: "Missing token" });
         const result = await refreshTokenService(token);
-        res.status(200).json({ message: 'Token refreshed Successfully', data: result });
+        setRefreshCookieService(res, result.refreshToken);
+        res.status(200).json({
+            message: 'Token refreshed Successfully',
+            data: {
+                accessToken: result.accessToken,
+                accessTokenExpiresIn: result.accessTokenExpiresIn
+            }
+        });
     } catch (error) {
         next(error);
     }

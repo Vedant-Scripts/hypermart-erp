@@ -1,10 +1,11 @@
 import { decodeToken, signAccessToken, signRefreshToken, verifyToken } from "../../common/auth/index.js";
 import config from "../../config/env.config.js";
-import { comparePassword, hashPassword } from "../../utils/password.js";
+import { comparePassword, hashPassword, hashToken } from "../../utils/password.js";
 import { findUserByEmail, findUserById, updateUserPassword } from "../users/users.repo.js";
 import type { ChangePasswordReqType, ResetPasswordReqType, SignInReqType } from "./auth.validation.js";
 import { PREFIXES, TOKEN_TYPES } from "../../common/constant.js";
 import { getRedisValue, setRedisValue } from "../../common/integrations/redis.integration.js";
+import type { Response } from "express";
 
 export const signInService = async (signServiceInput: SignInReqType) => {
     const user = await findUserByEmail(signServiceInput.identifier);
@@ -14,6 +15,7 @@ export const signInService = async (signServiceInput: SignInReqType) => {
     if (!isValid) throw new Error('Invalid Credentials');
 
     const tokens = createTokens({ sub: user.id, role: user.role, authType: signServiceInput.authType, clientType: signServiceInput.clientType });
+    // save to redis
     await saveRefreshTokenRedis(Number(user.id), tokens.refreshToken);
 
     return tokens;
@@ -27,9 +29,8 @@ export const refreshTokenService = async (token: string) => {
 
     const redisKey = `${PREFIXES.REFRESH_TOKEN}:${Number(userId)}`;
     const storedToken = await getRedisValue(redisKey);
-
     if (!storedToken) throw new Error('No active refresh session found (may have expired or logged out)');
-    if (storedToken !== token) throw new Error('Refresh token mismatch — possibly replaced');
+    if (storedToken !== hashToken(token)) throw new Error('Refresh token mismatch — possibly replaced');
 
     try {
         verifyToken(token, config.jwt.refreshSecret);
@@ -40,7 +41,6 @@ export const refreshTokenService = async (token: string) => {
     const tokens = createTokens({ sub: userId, role, authType, clientType })
     // save to redis 
     await saveRefreshTokenRedis(Number(userId), tokens.refreshToken);
-
     return tokens;
 }
 
@@ -81,6 +81,16 @@ export const resetPasswordService = async (resetPasswordInput: ResetPasswordReqT
     return { success: true };
 }
 
+export const setRefreshCookieService = (res: Response, token: string) => {
+    res.cookie("refreshToken", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        path: "/api/auth/refresh-token",
+        maxAge: config.jwt.refreshExpiresIn
+    })
+}
+
 // helpers 
 const createTokens = (payload: object) => ({
     accessToken: signAccessToken(payload),
@@ -92,6 +102,6 @@ const createTokens = (payload: object) => ({
 
 const saveRefreshTokenRedis = async (userId: number, refreshToken: string) => {
     const key = `${PREFIXES.REFRESH_TOKEN}:${userId}`;
-    const value = refreshToken;
+    const value = hashToken(refreshToken);
     return await setRedisValue(key, config.jwt.refreshExpiresIn, value);       // store refresh-token in redis
 }

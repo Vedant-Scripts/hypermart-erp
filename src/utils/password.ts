@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-
+import crypto from 'crypto';
 const SALT_ROUNDS: number = 10;
 
 // Hash Password
@@ -12,3 +12,6 @@ export const comparePassword = async (password: string, hashPassword: string): P
     return bcrypt.compare(password, hashPassword);
 }
 
+export const hashToken = (token: string): string => {
+    return crypto.createHash('sha256').update(token).digest('hex');
+}
