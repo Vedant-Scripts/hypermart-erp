@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { changePasswordSchema, forgotPasswordSchema, resetPasswordSchema, signInSchema, type ChangePasswordReqType, type ResetPasswordReqType, type SignInReqType } from "./auth.validation.js";
-import { changePasswordService, refreshTokenService, resetPasswordService, setRefreshCookieService, signInService } from "./auth.service.js";
+import { changePasswordService, refreshTokenService, resetPasswordService, setCookieService, signInService } from "./auth.service.js";
+import { csrfTokenGenerate } from "../../utils/password.js";
 
 export const signInController = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -11,7 +12,8 @@ export const signInController = async (req: Request, res: Response, next: NextFu
         }
         const signServiceInput: SignInReqType = parsed.data;
         const result = await signInService(signServiceInput);
-        setRefreshCookieService(res, result.refreshToken);
+        const csrfToken = csrfTokenGenerate();
+        setCookieService(res, result.refreshToken, csrfToken);
         res.status(200).json({
             message: 'Login Successfull',
             data: {
@@ -26,10 +28,16 @@ export const signInController = async (req: Request, res: Response, next: NextFu
 
 export const refreshTokenController = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const token = req.cookies.refreshToken;
-        if (!token) return res.status(401).json({ error: "Missing token" });
-        const result = await refreshTokenService(token);
-        setRefreshCookieService(res, result.refreshToken);
+        const csrfHeader = req.get('x-csrf-token');
+        const csrfCookie = req.cookies.csrfToken;
+        if (!csrfHeader || !csrfCookie || csrfHeader !== csrfCookie) {
+            return res.status(403).json({ message: 'CSRF token mismatch' });
+        }
+        const refreshToken = req.cookies.refreshToken;
+        if (!refreshToken) return res.status(401).json({ error: "Missing refresh token" });
+        const result = await refreshTokenService(refreshToken);
+        const csrfToken = csrfTokenGenerate();
+        setCookieService(res, result.refreshToken, csrfToken);
         res.status(200).json({
             message: 'Token refreshed Successfully',
             data: {
