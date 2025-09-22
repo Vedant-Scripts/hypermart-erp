@@ -85,7 +85,7 @@ export const setRefreshCookieService = (res: Response, token: string) => {
     res.cookie("refreshToken", token, {
         httpOnly: true,
         secure: true,
-        sameSite: "strict",
+        sameSite: "lax",
         path: "/api/auth/refresh-token",
         maxAge: config.jwt.refreshExpiresIn
     })
