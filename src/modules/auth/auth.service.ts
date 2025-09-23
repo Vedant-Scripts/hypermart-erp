@@ -93,7 +93,7 @@ export const setCookieService = (res: Response, refreshToken: string, csrfToken:
         httpOnly: false,    
         secure: true,       // for https
         sameSite: "none",
-        path: '/api/auth/refresh-token',
+        path: '/',
         maxAge: config.jwt.refreshExpiresIn
     });
 }
