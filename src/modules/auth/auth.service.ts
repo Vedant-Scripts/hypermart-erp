@@ -84,15 +84,15 @@ export const resetPasswordService = async (resetPasswordInput: ResetPasswordReqT
 export const setCookieService = (res: Response, refreshToken: string, csrfToken: string) => {
     res.cookie("refreshToken", refreshToken, {
         httpOnly: true,    
-        secure: true,       // for https
-        sameSite: "none",
+        secure: false,       // for https
+        sameSite: "lax",
         path: "/api/auth/refresh-token",
         maxAge: config.jwt.refreshExpiresIn
     });
     res.cookie("csrfToken", csrfToken, {
         httpOnly: false,    
-        secure: true,       // for https
-        sameSite: "none",
+        secure: false,       // for https
+        sameSite: "lax",
         path: '/',
         maxAge: config.jwt.refreshExpiresIn
     });
