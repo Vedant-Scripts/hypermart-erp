@@ -1,6 +1,6 @@
 import { decodeToken, signAccessToken, signRefreshToken, verifyToken } from "../../common/auth/index.js";
 import config from "../../config/env.config.js";
-import { comparePassword, hashPassword, hashToken } from "../../utils/password.js";
+import { comparePassword, hashPassword, hashToken } from "../../common/utils/password.js";
 import { findUserByEmail, findUserById, updateUserPassword } from "../users/users.repo.js";
 import type { ChangePasswordReqType, ResetPasswordReqType, SignInReqType } from "./auth.validation.js";
 import { PREFIXES, TOKEN_TYPES } from "../../common/constant.js";

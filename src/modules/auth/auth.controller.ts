@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { changePasswordSchema, forgotPasswordSchema, resetPasswordSchema, signInSchema, type ChangePasswordReqType, type ResetPasswordReqType, type SignInReqType } from "./auth.validation.js";
 import { changePasswordService, refreshTokenService, resetPasswordService, setCookieService, signInService } from "./auth.service.js";
-import { csrfTokenGenerate } from "../../utils/password.js";
+import { csrfTokenGenerate } from "../../common/utils/password.js";
 
 export const signInController = async (req: Request, res: Response, next: NextFunction) => {
     try {

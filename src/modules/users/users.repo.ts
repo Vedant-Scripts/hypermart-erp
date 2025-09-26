@@ -3,11 +3,11 @@ import prisma from "../../common/db.js"
 
 export const findUserByEmail = (email: string) => {
     return prisma.user.findUnique({ where: { email } });
-}
+};
 
 export const findUserById = (userId: number) => {
     return prisma.user.findUnique({ where: { id: userId } })
-}
+};
 
 export const updateUser = (userId: number, data: Partial<Prisma.UserUpdateInput>) => {
     return prisma.user.update({
