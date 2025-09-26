@@ -2,9 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
 
 import auth from './modules/auth/index.js';
-import cookieParser from 'cookie-parser';
+import { brandRouter, categoryRouter, unitRouter } from './modules/inventory/index.js';
 
 const app = express();
 
@@ -23,7 +24,11 @@ app.get('/', (req, res) => {
     res.send('BasketFull backend is running on EC2 server...');
 });
 
+// app routes 
 app.use(auth.prefix, auth.router);
+app.use(categoryRouter.prefix, categoryRouter.router);
+app.use(brandRouter.prefix, brandRouter.router);
+app.use(unitRouter.prefix, unitRouter.router);
 
 // 404 handler
 app.use((req, res, next) => {

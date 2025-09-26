@@ -13,59 +13,64 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ======================= MODULE : AUTH / USERS =======================
 model User {
   id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  userType UserType
+  userType UserType @map("user_type")
   role     Role
 
-  firstName     String
-  lastName      String?
+  firstName     String  @map("first_name")
+  lastName      String? @map("last_name")
   email         String? @unique
-  contactNumber String? @unique
-  gender        Gender?
+  contactNumber String? @unique @map("contact_number")
+  gender        Gender? @map("gender")
 
   // Shared address fields (for both app users & employees)
-  address String?
-  country String?
-  state   String?
-  city    String?
+  address String? @map("address")
+  country String? @map("country")
+  state   String? @map("state")
+  city    String? @map("city")
 
-  password String // nullable if OTP/OAuth
-  isActive Boolean @default(true)
+  password String  @map("password") // nullable if OTP/OAuth
+  isActive Boolean @default(true) @map("is_active")
 
   // Relations
-  employeeProfile EmployeeProfile?
+  employeeProfile        EmployeeProfile?
+  createdBarcodeSettings BarcodeSetting[] @relation("BarcodeSettingCreator")
+  updatedBarcodeSettings BarcodeSetting[] @relation("BarcodeSettingUpdator")
 
   @@index([role])
   @@index([userType])
+  @@map("user")
 }
 
 model EmployeeProfile {
   id                       Int       @id @default(autoincrement())
-  userId                   Int       @unique
-  empCode                  String?
-  dateOfBirth              DateTime?
-  joiningDate              DateTime?
-  shift                    Shift?
-  emergencyContactName     String?
-  emergencyContactRelation String?
-  emergencyContactNumber   String?
-  bankName                 String?
-  bankAccountNumber        String?
-  bankIfscCode             String?
-  bankBranch               String?
+  userId                   Int       @unique @map("user_id")
+  empCode                  String?   @map("emp_code")
+  dateOfBirth              DateTime? @map("date_of_birth")
+  joiningDate              DateTime? @map("joining_date")
+  shift                    Shift?    @map("shift")
+  emergencyContactName     String?   @map("emergency_contact_name")
+  emergencyContactRelation String?   @map("emergency_contact_relation")
+  emergencyContactNumber   String?   @map("emergency_contact_number")
+  bankName                 String?   @map("bank_name")
+  bankAccountNumber        String?   @map("bank_account_number")
+  bankIfscCode             String?   @map("bank_ifsc_code")
+  bankBranch               String?   @map("bank_branch")
 
   // Relations
   user User @relation(fields: [userId], references: [id])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([userId])
   @@index([empCode])
+  @@map("employee_profile")
 }
 
 enum UserType {
@@ -96,6 +101,59 @@ enum ContactType {
   SUPPLIER
   VENDOR
   OTHER
+}
+
+// ================ MODULE : BARCODE / PRODUCTS / CATEGORY / BRANDS / UNITS /  ============================================
+model BarcodeSetting {
+  id            Int      @id @default(autoincrement())
+  barcodePrefix String   @map("barcode_prefix")
+  barcodeSeries BigInt   @unique @map("barcode_series")
+  isDefault     Boolean  @default(true) @map("is_default")
+  createdBy     Int      @map("created_by")
+  updatedBy     Int?     @map("updated_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  creator User  @relation("BarcodeSettingCreator", fields: [createdBy], references: [id])
+  updator User? @relation("BarcodeSettingUpdator", fields: [updatedBy], references: [id])
+
+  @@map("barcode_setting") // table name 
+}
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([name])
+  @@map("category") // table name
+}
+
+model Brand {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([name])
+  @@map("brand") // table name
+}
+
+model Unit {
+  id        Int      @id @default(autoincrement())
+  unitName      String   @unique @map("unit_name")
+  unitCode  String   @unique @map("unit_code")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([unitName])
+  @@map("unit") // table name
 }
 
 // model Product {
