@@ -14,10 +14,10 @@ export type updateUnitDTO = UpdateUnitInput;
 
 // Response DTOs
 export type UnitResponseDTO = {
-    id: number;
+    id: string;
     unitName: string;
     unitCode: string;
-    isActive: boolean;
+    status: string;
     createdAt: Date;
     updatedAt: Date;
 }

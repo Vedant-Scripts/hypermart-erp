@@ -21,7 +21,9 @@ export const createCategoryController = async (req: Request, res: Response, next
 
 export const getCategoryByIdController = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const categoryId: number = Number(req.params.id);
+        const categoryId = req.params.id;
+        if (!categoryId) return res.status(400).json({ message: "Category id is required" });
+
         const category: CategoryResponseDTO | null = await getCategoryByIdService(categoryId);
 
         if (!category) return res.status(404).json({ message: "Category not found" });
@@ -50,7 +52,8 @@ export const updateCategoryController = async (req: Request, res: Response, next
         // validate with zod
 
         const parsed = updateCategorySchema.safeParse(req.body);
-        const categoryId: number = Number(req.params.id);
+        const categoryId = req.params.id;
+        if (!categoryId) return res.status(400).json({ message: "Category id is required" });
 
         if (!parsed.success) return res.status(400).json({ errors: parsed.error });
         // call service 
@@ -64,12 +67,14 @@ export const updateCategoryController = async (req: Request, res: Response, next
 }
 
 export const checkUsedCategoryController = (req: Request, res: Response, next: NextFunction) => {
-return res.status(200).json();
+    return res.status(200).json();
 }
 
 export const deleteCategoryController = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const categoryId: number = Number(req.params.id);
+        const categoryId = req.params.id;
+        if (!categoryId) return res.status(400).json({ message: "Category id is required" });
+        
         await deleteCategoryService(categoryId);
         return res.status(204).send();
     } catch (error) {

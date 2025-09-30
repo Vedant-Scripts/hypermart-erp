@@ -13,69 +13,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ======================= MODULE : AUTH / USERS =======================
-model User {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  userType UserType @map("user_type")
-  role     Role
-
-  firstName     String  @map("first_name")
-  lastName      String? @map("last_name")
-  email         String? @unique
-  contactNumber String? @unique @map("contact_number")
-  gender        Gender? @map("gender")
-
-  // Shared address fields (for both app users & employees)
-  address String? @map("address")
-  country String? @map("country")
-  state   String? @map("state")
-  city    String? @map("city")
-
-  password String  @map("password") // nullable if OTP/OAuth
-  isActive Boolean @default(true) @map("is_active")
-
-  // Relations
-  employeeProfile        EmployeeProfile?
-  createdBarcodeSettings BarcodeSetting[] @relation("BarcodeSettingCreator")
-  updatedBarcodeSettings BarcodeSetting[] @relation("BarcodeSettingUpdator")
-
-  @@index([role])
-  @@index([userType])
-  @@map("user")
-}
-
-model EmployeeProfile {
-  id                       Int       @id @default(autoincrement())
-  userId                   Int       @unique @map("user_id")
-  empCode                  String?   @map("emp_code")
-  dateOfBirth              DateTime? @map("date_of_birth")
-  joiningDate              DateTime? @map("joining_date")
-  shift                    Shift?    @map("shift")
-  emergencyContactName     String?   @map("emergency_contact_name")
-  emergencyContactRelation String?   @map("emergency_contact_relation")
-  emergencyContactNumber   String?   @map("emergency_contact_number")
-  bankName                 String?   @map("bank_name")
-  bankAccountNumber        String?   @map("bank_account_number")
-  bankIfscCode             String?   @map("bank_ifsc_code")
-  bankBranch               String?   @map("bank_branch")
-
-  // Relations
-  user User @relation(fields: [userId], references: [id])
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@index([userId])
-  @@index([empCode])
-  @@map("employee_profile")
-}
+// =============================== ENUMS =========================================
 
 enum UserType {
   APP_USER
   ERP_USER
+  DELIVERY_USER
 }
 
 enum Gender {
@@ -99,18 +42,95 @@ enum Role {
 enum ContactType {
   CUSTOMER
   SUPPLIER
-  VENDOR
-  OTHER
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  PENDING
+  SUSPENDED
+  DELETED
+}
+
+// enum ProductType {
+//   SINGLE
+//   VARIANT
+// }
+
+// enum ExpiryCalcType {
+//   MFG
+//   PURCHASE
+// }
+
+
+// ========================== MODULE : AUTH / USERS ===========================
+model User {
+  id        String      @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  userType UserType @map("user_type")
+  role     Role
+
+  firstName     String  @map("first_name")
+  lastName      String? @map("last_name")
+  email         String? @unique
+  contactNumber String? @unique @map("contact_number")
+  gender        Gender? @map("gender")
+
+  // Shared address fields (for both app users & employees)
+  address String? @map("address")
+  country String? @map("country")
+  state   String? @map("state")
+  city    String? @map("city")
+
+  password String  @map("password") // nullable if OTP/OAuth
+  status Status @default(ACTIVE)
+
+  // Relations
+  employeeProfile        EmployeeProfile?
+  createdBarcodeSettings BarcodeSetting[] @relation("BarcodeSettingCreator")
+  updatedBarcodeSettings BarcodeSetting[] @relation("BarcodeSettingUpdator")
+
+  @@index([role])
+  @@index([userType])
+  @@map("user")
+}
+
+model EmployeeProfile {
+  id                       String       @id @default(cuid())
+  userId                   String       @unique @map("user_id")
+  empCode                  String?   @map("emp_code")
+  dateOfBirth              DateTime? @map("date_of_birth")
+  joiningDate              DateTime? @map("joining_date")
+  shift                    Shift?    @map("shift")
+  emergencyContactName     String?   @map("emergency_contact_name")
+  emergencyContactRelation String?   @map("emergency_contact_relation")
+  emergencyContactNumber   String?   @map("emergency_contact_number")
+  bankName                 String?   @map("bank_name")
+  bankAccountNumber        String?   @map("bank_account_number")
+  bankIfscCode             String?   @map("bank_ifsc_code")
+  bankBranch               String?   @map("bank_branch")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([empCode])
+  @@map("employee_profile")
 }
 
 // ================ MODULE : BARCODE / PRODUCTS / CATEGORY / BRANDS / UNITS /  ============================================
 model BarcodeSetting {
-  id            Int      @id @default(autoincrement())
+  id            String      @id @default(cuid())
   barcodePrefix String   @map("barcode_prefix")
   barcodeSeries BigInt   @unique @map("barcode_series")
   isDefault     Boolean  @default(true) @map("is_default")
-  createdBy     Int      @map("created_by")
-  updatedBy     Int?     @map("updated_by")
+  createdBy     String      @map("created_by")
+  updatedBy     String?     @map("updated_by")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
@@ -121,22 +141,39 @@ model BarcodeSetting {
 }
 
 model Category {
-  id          Int      @id @default(autoincrement())
+  id          String      @id @default(cuid())
   name        String   @unique
   description String?
-  isActive    Boolean  @default(true) @map("is_active")
+  status  Status  @default(ACTIVE)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
+
+  subCategories  SubCategory[]
 
   @@index([name])
   @@map("category") // table name
 }
 
+model SubCategory {
+  id          String      @id @default(cuid())
+  categoryId  String @map("category_id")
+  name        String @unique
+  description String?
+  status  Status  @default(ACTIVE)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@index([name])
+  @@map("subcategory") // table name
+}
+
 model Brand {
-  id          Int      @id @default(autoincrement())
+  id          String      @id @default(cuid())
   name        String   @unique
   description String?
-  isActive    Boolean  @default(true) @map("is_active")
+  status  Status  @default(ACTIVE)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -145,10 +182,10 @@ model Brand {
 }
 
 model Unit {
-  id        Int      @id @default(autoincrement())
+  id        String      @id @default(cuid())
   unitName      String   @unique @map("unit_name")
   unitCode  String   @unique @map("unit_code")
-  isActive  Boolean  @default(true) @map("is_active")
+  status  Status  @default(ACTIVE)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -157,7 +194,7 @@ model Unit {
 }
 
 // model Product {
-//   id            Int         @id @default(autoincrement())
+//   id            String         @id @default(cuid())
 //   itemCode      String      @unique
 //   productName   String
 //   printName     String?
@@ -173,12 +210,28 @@ model Unit {
 //   updatedAt DateTime @updatedAt
 // }
 
-// enum ProductType {
-//   SINGLE
-//   VARIANT
-// }
+// =================================== Contact Management ========================================================
 
-// enum ExpiryCalcType {
-//   MFG
-//   PURCHASE
-// }
+model ContactManagement {
+  id String @id @default(cuid())
+  type  ContactType
+  name  String?
+  email String?  @map("email")
+  contactNumber String? @unique @map("contact_number")
+  companyName String?  @map("company_name")
+  gstin String? @map("gstin")
+  address String? @map("address")
+  city    String? @map("city")
+  state   String? @map("state")
+  country String?  @map("country")
+  pincode Int? @map("pincode")
+  
+  bankName String? @map("bank_name")
+  branchName String? @map("branch_name")
+  ifscCode  String? @map("ifsc_code")
+  accountName String? @map("account_name")
+  
+  status  Status  @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+} 

@@ -5,7 +5,8 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 
 import auth from './modules/auth/index.js';
-import { brandRouter, categoryRouter, unitRouter } from './modules/inventory/index.js';
+import { brandRouter, categoryRouter, subcategoryRouter, unitRouter } from './modules/inventory/index.js';
+import { contactRouter } from './modules/contacts/index.js';
 
 const app = express();
 
@@ -27,8 +28,10 @@ app.get('/', (req, res) => {
 // app routes 
 app.use(auth.prefix, auth.router);
 app.use(categoryRouter.prefix, categoryRouter.router);
+app.use(subcategoryRouter.prefix, subcategoryRouter.router);
 app.use(brandRouter.prefix, brandRouter.router);
 app.use(unitRouter.prefix, unitRouter.router);
+app.use(contactRouter.prefix, contactRouter.router);
 
 // 404 handler
 app.use((req, res, next) => {

@@ -11,7 +11,7 @@ export const createBrandService = async (data: CreateBrandDTO) => {
 }
 
 
-export const updateBrandService = async (brandId: number, data: updateBrandDTO) => {
+export const updateBrandService = async (brandId: string, data: updateBrandDTO) => {
     const existing = await getBrandByIdRepo(brandId);
     if (!existing) throw new Error('Brand Not Found');
 
@@ -25,7 +25,7 @@ export const updateBrandService = async (brandId: number, data: updateBrandDTO) 
     return await updateBrandRepo(brandId, prismaData);
 }
 
-export const getBrandByIdService = async (brandId: number) => {
+export const getBrandByIdService = async (brandId: string) => {
     return await getBrandByIdRepo(brandId);
 }
 
@@ -35,7 +35,7 @@ export const getAllBrandsService = async () => {
 
 // used brand logic build after product
 
-export const deleteBrandService = async (brandId: number) => {
+export const deleteBrandService = async (brandId: string) => {
     // will first check the used brand then would delete it
 
     const existing = await getBrandByIdRepo(brandId);

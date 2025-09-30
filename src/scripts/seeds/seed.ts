@@ -17,7 +17,7 @@ async function seed() {
             country: 'India',
             state: 'Gujarat',
             city: 'Vadodara',
-            isActive: true
+            status: 'ACTIVE'
         }
     });
     console.log('Seed completed');

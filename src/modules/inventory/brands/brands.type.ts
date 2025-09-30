@@ -14,10 +14,10 @@ export type updateBrandDTO = UpdateBrandInput;
 
 // Response DTOs
 export type BrandResponseDTO = {
-    id: number;
+    id: string;
     name: string;
     description?: string | null;
-    isActive: boolean;
+    status: string;
     createdAt: Date;
     updatedAt: Date;
 }

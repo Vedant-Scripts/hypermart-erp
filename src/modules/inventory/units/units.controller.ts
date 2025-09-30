@@ -21,9 +21,10 @@ export const createUnitController = async (req: Request, res: Response, next: Ne
 
 export const getUnitByIdController = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const unitId: number = Number(req.params.id);
-        const unit: UnitResponseDTO | null = await getUnitByIdService(unitId);
+        const unitId = req.params.id;
+        if (!unitId) return res.status(400).json({ message: "Unit id is required" });
 
+        const unit: UnitResponseDTO | null = await getUnitByIdService(unitId);
         if (!unit) return res.status(404).json({ message: "Unit not found" });
 
         return res.status(200).json({ message: "Unit found", data: unit });
@@ -47,12 +48,13 @@ export const getAllUnitsController = async (req: Request, res: Response, next: N
 
 export const updateUnitController = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const unitId = req.params.id;
+        if (!unitId) return res.status(400).json({ message: "Unit id is required" });
+
         // validate with zod
-
         const parsed = updateUnitSchema.safeParse(req.body);
-        const unitId: number = Number(req.params.id);
-
         if (!parsed.success) return res.status(400).json({ errors: parsed.error });
+        
         // call service 
         const unit: UnitResponseDTO = await updateUnitService(unitId, parsed.data);
 
@@ -64,12 +66,14 @@ export const updateUnitController = async (req: Request, res: Response, next: Ne
 }
 
 export const checkUsedUnitController = (req: Request, res: Response, next: NextFunction) => {
-return res.status(200).json();
+    return res.status(200).json();
 }
 
 export const deleteUnitController = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const unitId: number = Number(req.params.id);
+        const unitId = req.params.id;
+        if (!unitId) return res.status(400).json({ message: "Unit id is required" });
+
         await deleteUnitService(unitId);
         return res.status(204).send();
     } catch (error) {

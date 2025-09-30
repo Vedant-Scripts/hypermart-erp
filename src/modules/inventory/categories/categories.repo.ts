@@ -5,7 +5,7 @@ export const createCategoryRepo = async (data: CategoryCreateInput) => {
     return await prisma.category.create({ data });
 };
 
-export const updateCategoryRepo = async (categoryId: number, data: CategoryUpdateInput) => {
+export const updateCategoryRepo = async (categoryId: string, data: CategoryUpdateInput) => {
     return await prisma.category.update({
         where: {
             id: categoryId
@@ -14,7 +14,7 @@ export const updateCategoryRepo = async (categoryId: number, data: CategoryUpdat
     });
 };
 
-export const getCategoryByIdRepo = async (categoryId: number) => {
+export const getCategoryByIdRepo = async (categoryId: string) => {
     return await prisma.category.findUnique({ where: { id: categoryId } });
 };
 
@@ -26,6 +26,6 @@ export const getAllCategoriesRepo = async () => {
     return await prisma.category.findMany();
 };
 
-export const deleteCategoryRepo = async (categoryId: number) => {
+export const deleteCategoryRepo = async (categoryId: string) => {
     return await prisma.category.delete({ where: { id: categoryId } });
 };

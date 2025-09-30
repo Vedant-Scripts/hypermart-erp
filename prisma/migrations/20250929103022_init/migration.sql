@@ -1,40 +1,24 @@
-/*
-  Warnings:
+-- CreateEnum
+CREATE TYPE "public"."UserType" AS ENUM ('APP_USER', 'ERP_USER', 'DELIVERY_USER');
 
-  - You are about to drop the `BarcodeSetting` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Brand` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `Category` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `EmployeeProfile` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `User` table. If the table is not empty, all the data it contains will be lost.
+-- CreateEnum
+CREATE TYPE "public"."Gender" AS ENUM ('MALE', 'FEMALE');
 
-*/
--- DropForeignKey
-ALTER TABLE "public"."BarcodeSetting" DROP CONSTRAINT "BarcodeSetting_createdBy_fkey";
+-- CreateEnum
+CREATE TYPE "public"."Shift" AS ENUM ('MORNING', 'EVENING', 'NIGHT');
 
--- DropForeignKey
-ALTER TABLE "public"."BarcodeSetting" DROP CONSTRAINT "BarcodeSetting_updatedBy_fkey";
+-- CreateEnum
+CREATE TYPE "public"."Role" AS ENUM ('ADMIN', 'MANAGER', 'EMPLOYEE', 'USER');
 
--- DropForeignKey
-ALTER TABLE "public"."EmployeeProfile" DROP CONSTRAINT "EmployeeProfile_userId_fkey";
+-- CreateEnum
+CREATE TYPE "public"."ContactType" AS ENUM ('CUSTOMER', 'SUPPLIER', 'VENDOR');
 
--- DropTable
-DROP TABLE "public"."BarcodeSetting";
-
--- DropTable
-DROP TABLE "public"."Brand";
-
--- DropTable
-DROP TABLE "public"."Category";
-
--- DropTable
-DROP TABLE "public"."EmployeeProfile";
-
--- DropTable
-DROP TABLE "public"."User";
+-- CreateEnum
+CREATE TYPE "public"."Status" AS ENUM ('ACTIVE', 'INACTIVE', 'PENDING', 'SUSPENDED', 'DELETED');
 
 -- CreateTable
 CREATE TABLE "public"."user" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "user_type" "public"."UserType" NOT NULL,
@@ -49,15 +33,15 @@ CREATE TABLE "public"."user" (
     "state" TEXT,
     "city" TEXT,
     "password" TEXT NOT NULL,
-    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "status" "public"."Status" NOT NULL DEFAULT 'ACTIVE',
 
     CONSTRAINT "user_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "public"."employee_profile" (
-    "id" SERIAL NOT NULL,
-    "user_id" INTEGER NOT NULL,
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
     "emp_code" TEXT,
     "date_of_birth" TIMESTAMP(3),
     "joining_date" TIMESTAMP(3),
@@ -77,12 +61,12 @@ CREATE TABLE "public"."employee_profile" (
 
 -- CreateTable
 CREATE TABLE "public"."barcode_setting" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "barcode_prefix" TEXT NOT NULL,
     "barcode_series" BIGINT NOT NULL,
     "is_default" BOOLEAN NOT NULL DEFAULT true,
-    "created_by" INTEGER NOT NULL,
-    "updated_by" INTEGER,
+    "created_by" TEXT NOT NULL,
+    "updated_by" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -91,10 +75,10 @@ CREATE TABLE "public"."barcode_setting" (
 
 -- CreateTable
 CREATE TABLE "public"."category" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
-    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "description" TEXT,
+    "status" "public"."Status" NOT NULL DEFAULT 'ACTIVE',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -102,15 +86,65 @@ CREATE TABLE "public"."category" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."brand" (
-    "id" SERIAL NOT NULL,
+CREATE TABLE "public"."subcategory" (
+    "id" TEXT NOT NULL,
+    "category_id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
-    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "description" TEXT,
+    "status" "public"."Status" NOT NULL DEFAULT 'ACTIVE',
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "subcategory_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."brand" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "status" "public"."Status" NOT NULL DEFAULT 'ACTIVE',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "brand_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."unit" (
+    "id" TEXT NOT NULL,
+    "unit_name" TEXT NOT NULL,
+    "unit_code" TEXT NOT NULL,
+    "status" "public"."Status" NOT NULL DEFAULT 'ACTIVE',
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "unit_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."ContactManagement" (
+    "id" TEXT NOT NULL,
+    "type" "public"."ContactType" NOT NULL,
+    "name" TEXT,
+    "email" TEXT,
+    "contact_number" TEXT,
+    "company_name" TEXT,
+    "gstin" TEXT,
+    "address" TEXT,
+    "city" TEXT,
+    "state" TEXT,
+    "country" TEXT,
+    "pincode" INTEGER,
+    "bank_name" TEXT,
+    "branch_name" TEXT,
+    "ifsc_code" TEXT,
+    "account_name" TEXT,
+    "status" "public"."Status" NOT NULL DEFAULT 'ACTIVE',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ContactManagement_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -144,10 +178,25 @@ CREATE UNIQUE INDEX "category_name_key" ON "public"."category"("name");
 CREATE INDEX "category_name_idx" ON "public"."category"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "subcategory_name_key" ON "public"."subcategory"("name");
+
+-- CreateIndex
+CREATE INDEX "subcategory_name_idx" ON "public"."subcategory"("name");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "brand_name_key" ON "public"."brand"("name");
 
 -- CreateIndex
 CREATE INDEX "brand_name_idx" ON "public"."brand"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "unit_unit_name_key" ON "public"."unit"("unit_name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "unit_unit_code_key" ON "public"."unit"("unit_code");
+
+-- CreateIndex
+CREATE INDEX "unit_unit_name_idx" ON "public"."unit"("unit_name");
 
 -- AddForeignKey
 ALTER TABLE "public"."employee_profile" ADD CONSTRAINT "employee_profile_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -157,3 +206,6 @@ ALTER TABLE "public"."barcode_setting" ADD CONSTRAINT "barcode_setting_created_b
 
 -- AddForeignKey
 ALTER TABLE "public"."barcode_setting" ADD CONSTRAINT "barcode_setting_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "public"."user"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."subcategory" ADD CONSTRAINT "subcategory_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "public"."category"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

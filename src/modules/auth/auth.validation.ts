@@ -1,5 +1,4 @@
-import z, { email } from "zod";
-import type auth from "./index.js";
+import z from "zod";
 
 export const signInSchema = z.object({
     authType:z.enum(['email', 'mobile']),

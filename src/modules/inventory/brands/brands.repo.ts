@@ -5,7 +5,7 @@ export const createBrandRepo = async (data: BrandCreateInput) => {
     return await prisma.brand.create({ data });
 };
 
-export const updateBrandRepo = async (brandId: number, data: BrandUpdateInput) => {
+export const updateBrandRepo = async (brandId: string, data: BrandUpdateInput) => {
     return await prisma.brand.update({
         where: {
             id: brandId
@@ -14,7 +14,7 @@ export const updateBrandRepo = async (brandId: number, data: BrandUpdateInput) =
     });
 };
 
-export const getBrandByIdRepo = async (brandId: number) => {
+export const getBrandByIdRepo = async (brandId: string) => {
     return await prisma.brand.findUnique({ where: { id: brandId } });
 };
 
@@ -26,6 +26,6 @@ export const getAllBrandsRepo = async () => {
     return await prisma.brand.findMany();
 };
 
-export const deleteBrandRepo = async (brandId: number) => {
+export const deleteBrandRepo = async (brandId: string) => {
     return await prisma.brand.delete({ where: { id: brandId } });
 };
