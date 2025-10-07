@@ -1,4 +1,5 @@
 import { config as loadEnv } from "dotenv";
+import { parse } from "path";
 import { z } from "zod/v4";
 
 loadEnv(); // loading env into process.env
@@ -8,18 +9,23 @@ const envSchema = z.object({
     PORT: z.coerce.number().default(5000),
 
     DATABASE_URL: z.url(),
-
+    // JWT setting keys
     JWT_SECRET: z.string(),
     JWT_EXPIRES_IN: z.coerce.number(),
     JWT_REFRESH_SECRET: z.string(),
     JWT_REFRESH_EXPIRES_IN: z.coerce.number(),
 
-
+    // Redis setting keys
     REDIS_USERNAME: z.string(),
     REDIS_PASSWORD: z.string(),
     REDIS_HOST: z.string(),
     REDIS_PORT: z.coerce.number().default(18096),
     REDIS_REFRESH_TOKEN_EXPIRES_IN: z.string(),
+    REDIS_OTP_EXPIRES_IN: z.string(),
+
+    // MSG-91 setting keys
+    AUTH_KEY: z.string(),
+    MSG_DLT_TEMPLATE_ID_OTP: z.string(),
 });
 
 type Env = z.infer<typeof envSchema>;
@@ -49,12 +55,17 @@ const config = {
         host: parsed.REDIS_HOST,
         port: parsed.REDIS_PORT,
         refreshTokenExpireIn: parsed.REDIS_REFRESH_TOKEN_EXPIRES_IN,
+        otpExpiresIn: parsed.REDIS_OTP_EXPIRES_IN
     },
     jwt: {
         secret: parsed.JWT_SECRET,
         expiresIn: parsed.JWT_EXPIRES_IN,
         refreshSecret: parsed.JWT_REFRESH_SECRET,
         refreshExpiresIn: parsed.JWT_REFRESH_EXPIRES_IN,
+    },
+    msg91: {
+        authKey: parsed.AUTH_KEY,
+        msgDltTemplateIdOtp: parsed.MSG_DLT_TEMPLATE_ID_OTP
     }
     // integrations
     // s3 

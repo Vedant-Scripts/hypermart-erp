@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import config from "../../config/env.config.js";
-import { TOKEN_TYPES } from "../constant.js";
+import { TOKEN_TYPES } from "../utils/constant.js";
 
 
 export const signAccessToken = (payload: object) => {

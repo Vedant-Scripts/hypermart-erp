@@ -7,6 +7,8 @@ import cookieParser from 'cookie-parser';
 import auth from './modules/auth/index.js';
 import { brandRouter, categoryRouter, subcategoryRouter, unitRouter } from './modules/inventory/index.js';
 import { contactRouter } from './modules/contacts/index.js';
+import { userRouter } from './modules/users/index.js';
+import { authenicateClient } from './common/auth/guards.auth.js';
 
 const app = express();
 
@@ -20,6 +22,7 @@ app.use(cors({
 app.use(helmet());
 app.use(morgan('dev'));
 
+app.use(authenicateClient); // client platform mandatory checking 
 
 app.get('/', (req, res) => {
     res.send('BasketFull backend is running on EC2 server...');
@@ -32,6 +35,7 @@ app.use(subcategoryRouter.prefix, subcategoryRouter.router);
 app.use(brandRouter.prefix, brandRouter.router);
 app.use(unitRouter.prefix, unitRouter.router);
 app.use(contactRouter.prefix, contactRouter.router);
+app.use(userRouter.prefix, userRouter.router);
 
 // 404 handler
 app.use((req, res, next) => {

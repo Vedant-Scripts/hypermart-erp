@@ -1,10 +1,11 @@
 import z from "zod";
+import { AUTH_TYPES } from "../../common/utils/constant.js";
 
 export const signInSchema = z.object({
-    authType:z.enum(['email', 'mobile']),
-    clientType:z.enum(['erpUser', 'mobileUser']),
+    authType:z.enum(AUTH_TYPES),
     identifier: z.string(),
-    password: z.string().min(1)
+    password: z.string().min(1).optional(),
+    otp: z.string().regex(/^\d{6}$/, "OTP must be exactly 6 digits").optional()
 });
 
 export const forgotPasswordSchema = z.object({

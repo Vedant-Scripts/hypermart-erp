@@ -1,7 +1,7 @@
 import redis from "../../config/redis.config.js";
 import type { RedisKey } from "ioredis";
 
-export const setRedisValue = async (key: RedisKey, expiry: number, value: string) => {
+export const setRedisValue = async (key: RedisKey, expiry: number | string, value: string) => {
     return redis.setex(key, expiry, value);
 }
 
