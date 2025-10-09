@@ -15,12 +15,6 @@ datasource db {
 
 // =============================== ENUMS =========================================
 
-// enum UserType {
-//   APP_USER
-//   ERP_USER
-//   DELIVERY_USER
-// }
-
 enum Gender {
   MALE
   FEMALE
@@ -66,7 +60,6 @@ enum Status {
 // ========================== MODULE : AUTH / USERS ===========================
 model User {
   id               String    @id @default(cuid())
-  // userType         UserType  @map("user_type")
   role             Role
   firstName        String?   @map("first_name")
   lastName         String?   @map("last_name")
@@ -75,7 +68,6 @@ model User {
   gender           Gender?   @map("gender")
   password         String?   @map("password") // nullable if OTP/OAuth
   status           Status    @default(ACTIVE)
-  allowedPlatforms String[]
   createdAt        DateTime  @default(now()) @map("created_at")
   updatedAt        DateTime  @updatedAt @map("updated_at")
   deletedAt        DateTime? @map("deleted_at")

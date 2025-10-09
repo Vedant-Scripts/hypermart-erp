@@ -7,6 +7,8 @@ import { PREFIXES, TOKEN_TYPES } from "../../common/utils/constant.js";
 import { delRedisValue, getRedisValue, setRedisValue } from "../../common/integrations/redis.integration.js";
 import type { Response } from "express";
 import { generateOTP, sendOtpToMobile, storeOtpRedis, verifyOtpRedis } from "../../common/utils/otp.js";
+import { createCustomerUserService } from "../users/users.service.js";
+import type { User } from "@prisma/client";
 
 export const sendOtpService = async (sendOtpInput: SignInReqType) => {
 
@@ -37,39 +39,23 @@ export const sendOtpService = async (sendOtpInput: SignInReqType) => {
 }
 
 export const signInService = async (signServiceInput: SignInReqType, client: { clientId: string, clientCode: string }) => {
+    let user: User;
+    if (signServiceInput.authType === 'email_password') {
+        const found = await getUserByEmailRepo(signServiceInput.identifier);
+        if (!found) throw new Error('Invalid credentials');
 
-    const user = (signServiceInput.authType === 'mobile_otp')
-        ? await getUserByContactNumberRepo(signServiceInput.identifier)
-        : await getUserByEmailRepo(signServiceInput.identifier);
+        if (!signServiceInput.password) throw new Error('Password is mandatory!');
+        const isValid = await comparePassword(signServiceInput.password, found.password!);
+        if (!isValid) throw new Error('Invalid Credentials');
 
-    if (!user) throw new Error('Invalid credentials');
+        user = found;
+    } else {
+        user = await verifyOtpService(signServiceInput, client.clientId);
+    }
 
     if (user.status !== "ACTIVE") throw new Error("Account Inactive");
-
     const userClientPlatformCheck = await checkUserClientIdRepo(user.id, client.clientId);
-    if (!userClientPlatformCheck) throw new Error('Account not allowed on this platform');
-
-
-    if (client.clientCode === 'customer_app') {
-        //mobile otp verify  
-        // suggestion call verify Otp Service - there verify and create new user if it doesn't exist.
-        if (!signServiceInput.otp) throw new Error("Please provide valid OTP");
-
-        const result = await verifyOtpRedis(
-            signServiceInput.authType,
-            signServiceInput.identifier,
-            signServiceInput.otp
-        );
-
-        if (!result.success) {
-            const message = result.reason === "expired" ? "OTP has expired" : "Invalid OTP";
-            throw new Error(message);
-        }
-    } else {
-        if (!signServiceInput.password) throw new Error('Password is mandatory!');
-        const isValid = await comparePassword(signServiceInput.password, user.password!);
-        if (!isValid) throw new Error('Invalid Credentials');
-    }
+    if (!userClientPlatformCheck) throw new Error("Account not allowed on this platform");
 
     const tokens = createTokens({ sub: user.id, aud: client.clientCode, role: user.role, authType: signServiceInput.authType });
     // save to redis
@@ -179,4 +165,32 @@ const saveRefreshTokenRedis = async (userId: number, refreshToken: string) => {
     const key = `${PREFIXES.REFRESH_TOKEN}:${userId}`;
     const value = hashToken(refreshToken);
     return await setRedisValue(key, config.jwt.refreshExpiresIn, value);       // store refresh-token in redis
+}
+
+const verifyOtpService = async (signServiceInput: SignInReqType, clientId: string): Promise<User> => {
+
+    if (!signServiceInput.otp) throw new Error("Please provide valid OTP");
+
+    const result = await verifyOtpRedis(
+        signServiceInput.authType,
+        signServiceInput.identifier,
+        signServiceInput.otp
+    );
+
+    if (!result.success) {
+        const message = result.reason === "expired" ? "OTP has expired" : "Invalid OTP";
+        throw new Error(message);
+    }
+
+    const existingUser = (signServiceInput.authType === 'mobile_otp')
+        ? await getUserByContactNumberRepo(signServiceInput.identifier)
+        : await getUserByEmailRepo(signServiceInput.identifier);
+
+    if (existingUser) return existingUser;
+
+    const createdUser = (signServiceInput.authType === 'mobile_otp')
+        ? await createCustomerUserService(signServiceInput.identifier, 'mobile')
+        : await createCustomerUserService(signServiceInput.identifier, 'email');
+
+    return createdUser;
 }

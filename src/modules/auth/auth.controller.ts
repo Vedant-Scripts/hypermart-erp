@@ -7,7 +7,7 @@ export const sendOtpController = async (req: Request, res: Response, next: NextF
     try {
         const { clientCode } = res.locals.client;
         if (clientCode !== 'customer_app') return res.status(403).json({ message: "Forbidden Request" });
-        
+
         const parsed = signInSchema.safeParse(req.body);
         if (!parsed.success) {
             // validation failed
@@ -27,13 +27,16 @@ export const sendOtpController = async (req: Request, res: Response, next: NextF
 
 export const signInController = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const { clientCode } = res.locals.client;
         const parsed = signInSchema.safeParse(req.body);
         if (!parsed.success) return res.status(400).json({ errors: parsed.error });
 
         const signServiceInput = parsed.data as SignInReqType;
-        const result = await signInService(signServiceInput, res.locals.client);
 
-        const { clientCode } = res.locals.client;
+        if ((signServiceInput.authType === 'mobile_otp' || signServiceInput.authType === 'email_otp') && clientCode !== 'customer_app') return res.status(403).json({ error: 'OTP-based sign-in is only supported on the Customer App.' });
+        if ((signServiceInput.authType === 'email_password') && (clientCode !== 'erp_web' && clientCode !== 'delivery_app')) return res.status(403).json({ error: 'Password sign-in is only supported on ERP Web and Delivery App.' });
+
+        const result = await signInService(signServiceInput, res.locals.client);
 
         if (clientCode === 'erp_web') {
             // response for the web apps

@@ -36,6 +36,21 @@ export const createUserWithRelationsRepo = (dto: any) => {
     });
 }
 
+export const createCustomerUserWithRelationsRepo = (data: { role: Role, contactNumber: string | null, email: string | null }) => {
+    return prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({ data });
+        const clientId = ROLE_TO_CLIENT[data.role as keyof typeof ROLE_TO_CLIENT];
+
+        await tx.userAllowedClient.create({
+            data: {
+                user: { connect: { id: user.id } },
+                client: { connect: { clientId: clientId } }
+            }
+        });
+        return user;
+    })
+}
+
 export const getUserByEmailRepo = (email: string) => {
     return prisma.user.findFirst({ where: { email: email.toLowerCase().trim(), deletedAt: null } });
 };

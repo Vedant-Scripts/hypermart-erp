@@ -1,7 +1,7 @@
-import type { Role } from "@prisma/client";
+import { Role } from "@prisma/client";
 import { pickDefined } from "../../common/utils/pickDefined.js";
 import type { createUserDTO, updateUserDTO, UserUpdateInput } from "./users.types.js";
-import { createUserWithRelationsRepo, deleteUsersWithRelationsRepo, getUserByContactNumberRepo, getUserByEmailRepo, getUserByIdRepo, getUsersByRoleRepo, updateUserRepo } from "./users.repo.js";
+import { createCustomerUserWithRelationsRepo, createUserWithRelationsRepo, deleteUsersWithRelationsRepo, getUserByContactNumberRepo, getUserByEmailRepo, getUserByIdRepo, getUsersByRoleRepo, updateUserRepo } from "./users.repo.js";
 
 export const createUserService = async (data: createUserDTO) => {
     if (data.contactNumber) {
@@ -56,4 +56,13 @@ export const deleteUserService = async (userId: string) => {
     if (!existing) throw new Error('User Not Found');
 
     return await deleteUsersWithRelationsRepo(userId);
+}
+
+export const createCustomerUserService = (identifier: string, identifierType: "email" | "mobile") => {
+    const data = {
+        role: Role.USER,
+        contactNumber: identifierType === "mobile" ? identifier : null,
+        email: identifierType === "email" ? identifier : null,
+    };
+    return createCustomerUserWithRelationsRepo(data);
 }
