@@ -1,4 +1,4 @@
-import { pickDefined } from "../../../common/utils/pickDefined.js";
+import { pickDefined } from "../../../common/utils/pickDefined.utils.js";
 import { createBrandRepo, deleteBrandRepo, getAllBrandsRepo, getBrandByIdRepo, getBrandByNameRepo, updateBrandRepo } from "./brands.repo.js";
 import type { BrandUpdateInput, CreateBrandDTO, updateBrandDTO } from "./brands.type.js";
 

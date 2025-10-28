@@ -42,7 +42,7 @@ export const sendOtpToMobile = async (identifier: string, otp: string) => {
         "recipients": [
             {
                 "mobiles": `${identifier}`,
-                "VAR1": otp
+                "var1": otp
             }
         ]
     }

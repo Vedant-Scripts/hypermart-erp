@@ -1,4 +1,4 @@
-import { pickDefined } from "../../../common/utils/pickDefined.js";
+import { pickDefined } from "../../../common/utils/pickDefined.utils.js";
 import { createCategoryRepo, deleteCategoryRepo, getAllCategoriesRepo, getCategoryByIdRepo, getCategoryByNameRepo, updateCategoryRepo } from "./categories.repo.js";
 import type { CategoryUpdateInput, CreateCategoryDTO, updateCategoryDTO } from "./categories.type.js";
 

@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { changePasswordSchema, forgotPasswordSchema, resetPasswordSchema, signInSchema, type ChangePasswordReqType, type ResetPasswordReqType, type SignInReqType } from "./auth.validation.js";
 import { changePasswordService, refreshTokenService, resetPasswordService, sendOtpService, setCookieService, signInService } from "./auth.service.js";
-import { csrfTokenGenerate } from "../../common/utils/password.js";
+import { csrfTokenGenerate } from "../../common/utils/password.utils.js";
 
 export const sendOtpController = async (req: Request, res: Response, next: NextFunction) => {
     try {

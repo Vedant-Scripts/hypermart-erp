@@ -1,12 +1,12 @@
 import { decodeToken, signAccessToken, signRefreshToken, verifyToken } from "../../common/auth/index.js";
 import config from "../../config/env.config.js";
-import { comparePassword, hashPassword, hashToken } from "../../common/utils/password.js";
+import { comparePassword, hashPassword, hashToken } from "../../common/utils/password.utils.js";
 import { checkUserClientIdRepo, getUserByContactNumberRepo, getUserByEmailRepo, getUserByIdRepo, updateUserPasswordRepo } from "../users/users.repo.js";
 import type { ChangePasswordReqType, ResetPasswordReqType, SignInReqType } from "./auth.validation.js";
 import { PREFIXES, TOKEN_TYPES } from "../../common/utils/constant.js";
 import { delRedisValue, getRedisValue, setRedisValue } from "../../common/integrations/redis.integration.js";
 import type { Response } from "express";
-import { generateOTP, sendOtpToMobile, storeOtpRedis, verifyOtpRedis } from "../../common/utils/otp.js";
+import { generateOTP, sendOtpToMobile, storeOtpRedis, verifyOtpRedis } from "../../common/utils/otp.utils.js";
 import { createCustomerUserService } from "../users/users.service.js";
 import type { User } from "@prisma/client";
 

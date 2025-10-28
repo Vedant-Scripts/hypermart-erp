@@ -1,4 +1,4 @@
-import { pickDefined } from "../../../common/utils/pickDefined.js";
+import { pickDefined } from "../../../common/utils/pickDefined.utils.js";
 import { getCategoryByIdRepo } from "../categories/categories.repo.js";
 import { createSubcategoryRepo, deleteSubcategoryRepo, getAllSubcategoriesRepo, getSubcategoriesByCategoryIdRepo, getSubcategoryByIdRepo, getSubcategoryByNameRepo, updateSubcategoryRepo } from "./subcategories.repo.js";
 import type { SubcategoryUpdateInput, CreateSubcategoryDTO, updateSubcategoryDTO, SubcategoryCreateInput } from "./subcategories.type.js";

@@ -5,7 +5,7 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 
 import auth from './modules/auth/index.js';
-import { brandRouter, categoryRouter, subcategoryRouter, unitRouter } from './modules/inventory/index.js';
+import { brandRouter, categoryRouter, productRouter, subcategoryRouter, unitRouter } from './modules/inventory/index.js';
 import { contactRouter } from './modules/contacts/index.js';
 import { userRouter } from './modules/users/index.js';
 import { authenicateClient } from './common/auth/guards.auth.js';
@@ -36,6 +36,7 @@ app.use(brandRouter.prefix, brandRouter.router);
 app.use(unitRouter.prefix, unitRouter.router);
 app.use(contactRouter.prefix, contactRouter.router);
 app.use(userRouter.prefix, userRouter.router);
+app.use(productRouter.prefix, productRouter.router);
 
 // 404 handler
 app.use((req, res, next) => {

@@ -1,7 +1,7 @@
 import type { Role } from "@prisma/client";
 import { ROLE_TO_CLIENT } from "../../common/utils/constant.js";
 import prisma from "../../common/db.js"
-import { hashPassword } from "../../common/utils/password.js";
+import { hashPassword } from "../../common/utils/password.utils.js";
 import type { UserCreateInput, UserUpdateInput } from "./users.types.js";
 
 export const createUserWithRelationsRepo = (dto: any) => {

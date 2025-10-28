@@ -10,22 +10,22 @@ const envSchema = z.object({
 
     DATABASE_URL: z.url(),
     // JWT setting keys
-    JWT_SECRET: z.string(),
+    JWT_SECRET: z.string().min(1),
     JWT_EXPIRES_IN: z.coerce.number(),
-    JWT_REFRESH_SECRET: z.string(),
+    JWT_REFRESH_SECRET: z.string().min(1),
     JWT_REFRESH_EXPIRES_IN: z.coerce.number(),
 
     // Redis setting keys
-    REDIS_USERNAME: z.string(),
-    REDIS_PASSWORD: z.string(),
-    REDIS_HOST: z.string(),
+    REDIS_USERNAME: z.string().min(1),
+    REDIS_PASSWORD: z.string().min(1),
+    REDIS_HOST: z.string().min(1),
     REDIS_PORT: z.coerce.number().default(18096),
-    REDIS_REFRESH_TOKEN_EXPIRES_IN: z.string(),
-    REDIS_OTP_EXPIRES_IN: z.string(),
+    REDIS_REFRESH_TOKEN_EXPIRES_IN: z.string().min(1),
+    REDIS_OTP_EXPIRES_IN: z.string().min(1),
 
     // MSG-91 setting keys
-    AUTH_KEY: z.string(),
-    MSG_DLT_TEMPLATE_ID_OTP: z.string(),
+    AUTH_KEY: z.string().min(1),
+    MSG_DLT_TEMPLATE_ID_OTP: z.string().min(1),
 });
 
 type Env = z.infer<typeof envSchema>;

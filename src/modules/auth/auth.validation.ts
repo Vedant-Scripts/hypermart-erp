@@ -3,7 +3,7 @@ import { AUTH_TYPES } from "../../common/utils/constant.js";
 
 export const signInSchema = z.object({
     authType:z.enum(AUTH_TYPES),
-    identifier: z.string(),
+    identifier: z.string().min(1),
     password: z.string().min(1).optional(),
     otp: z.string().regex(/^\d{6}$/, "OTP must be exactly 6 digits").optional()
 });
@@ -13,7 +13,7 @@ export const forgotPasswordSchema = z.object({
 });
 
 export const changePasswordSchema = z.object({
-    oldPassword: z.string(),
+    oldPassword: z.string().min(1),
     newPassword: z.string().min(6, "Password must be at least 6 characters")
 })
 

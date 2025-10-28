@@ -1,8 +1,8 @@
 import prisma from "../../../common/db.js";
 import type { SubcategoryCreateInput, SubcategoryUpdateInput } from "./subcategories.type.js";
 
-export const createSubcategoryRepo = async (data: SubcategoryCreateInput) => {
-    return await prisma.subCategory.create({
+export const createSubcategoryRepo = (data: SubcategoryCreateInput) => {
+    return prisma.subcategory.create({
         data,
         include: {
             category: {
@@ -12,8 +12,8 @@ export const createSubcategoryRepo = async (data: SubcategoryCreateInput) => {
     });
 };
 
-export const updateSubcategoryRepo = async (subcategoryId: string, data: SubcategoryUpdateInput) => {
-    return await prisma.subCategory.update({
+export const updateSubcategoryRepo = (subcategoryId: string, data: SubcategoryUpdateInput) => {
+    return prisma.subcategory.update({
         where: {
             id: subcategoryId
         },
@@ -26,8 +26,8 @@ export const updateSubcategoryRepo = async (subcategoryId: string, data: Subcate
     });
 };
 
-export const getSubcategoryByIdRepo = async (subcategoryId: string) => {
-    return await prisma.subCategory.findUnique({
+export const getSubcategoryByIdRepo = (subcategoryId: string) => {
+    return prisma.subcategory.findUnique({
         where: { id: subcategoryId },
         include: {
             category: {
@@ -37,8 +37,8 @@ export const getSubcategoryByIdRepo = async (subcategoryId: string) => {
     });
 };
 
-export const getSubcategoriesByCategoryIdRepo = async (categoryId: string) => {
-    return await prisma.subCategory.findMany({
+export const getSubcategoriesByCategoryIdRepo = (categoryId: string) => {
+    return prisma.subcategory.findMany({
         where: { categoryId: categoryId },
         include: {
             category: {
@@ -48,15 +48,15 @@ export const getSubcategoriesByCategoryIdRepo = async (categoryId: string) => {
     });
 };
 
-export const getSubcategoryByNameRepo = async (name: string) => {
-    return prisma.subCategory.findUnique({
+export const getSubcategoryByNameRepo = (name: string) => {
+    return prisma.subcategory.findUnique({
         where: { name },
         select: { id: true }
     });
 };
 
-export const getAllSubcategoriesRepo = async () => {
-    return await prisma.subCategory.findMany({
+export const getAllSubcategoriesRepo = () => {
+    return prisma.subcategory.findMany({
         include: {
             category: {
                 select: { name: true }
@@ -65,6 +65,6 @@ export const getAllSubcategoriesRepo = async () => {
     });
 };
 
-export const deleteSubcategoryRepo = async (subcategoryId: string) => {
-    return await prisma.subCategory.delete({ where: { id: subcategoryId } });
+export const deleteSubcategoryRepo = (subcategoryId: string) => {
+    return prisma.subcategory.delete({ where: { id: subcategoryId } });
 };

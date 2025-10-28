@@ -2,7 +2,7 @@ import { Status } from "@prisma/client";
 import { z } from "zod/v4";
 
 export const subcategorySchema = z.object({
-    categoryId: z.string(),
+    categoryId: z.string().min(1),
     name: z.string().trim().toUpperCase().min(1, { error: "Subcategory name is required" }),
     description: z.string().nullable(),
     status: z.enum(Status).default("ACTIVE")

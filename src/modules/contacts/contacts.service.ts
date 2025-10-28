@@ -1,5 +1,5 @@
 import type { ContactType } from "@prisma/client";
-import { pickDefined } from "../../common/utils/pickDefined.js";
+import { pickDefined } from "../../common/utils/pickDefined.utils.js";
 import { createContactRepo, deleteContactRepo, getAllContactsByContactTypeRepo, getContactByIdRepo, getContactByContactNumberRepo, updateContactRepo } from "./contacts.repo.js";
 import type { ContactUpdateInput, createContactDTO, updateContactDTO } from "./contacts.types.js";
 
