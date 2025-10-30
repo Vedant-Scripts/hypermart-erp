@@ -4,7 +4,8 @@ import type { batchUpdatePayload, CreateProductInput, UpdateProductPayload, vari
 // this are for repo usage
 export type ProductCreateInput = Prisma.ProductUncheckedCreateInput;
 export type ProductUpdateInput = Prisma.ProductUpdateInput;
-
+export type VariantUpdateInput = Prisma.VariantUpdateInput;
+export type BatchUpdateInput = Prisma.BatchUpdateInput;
 
 // For api payloads
 export type CreateProductDTO = CreateProductInput;

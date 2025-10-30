@@ -19,7 +19,7 @@ export const createProductController = async (req: Request, res: Response, next:
         if (!parsed.success) return res.status(400).json({ errors: parsed.error });
 
         // call service
-        const product = await createProductService(parsed.data)
+        const product = await createProductService(parsed.data);
 
         return res.status(201).json({ message: 'Product Created', data: product })
 
@@ -56,21 +56,32 @@ export const getProductByIdController = async (req: Request, res: Response, next
 export const updateProductsByController = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { productId, variantId, batchId } = req.query;
+        if (!productId && !variantId && !batchId) return res.status(400).json({ message: "Id is required" });
+
+        const ids = { productId, variantId, batchId };
+
+        for (const [key, value] of Object.entries(ids)) {
+            if (value !== undefined && typeof value !== 'string') {
+                return res.status(400).json({ message: `${key} must be a string` });
+            }
+        }
         const parsed = (productId)
             ? updateProductPayloadSchema.safeParse(req.body)
             : (variantId)
                 ? variantUpdatePayloadSchema.safeParse(req.body)
                 : batchUpdatePayloadSchema.safeParse(req.body)
-        if (!parsed.success) return res.status(400).json({ message: "Invalid Inputs Sent" });
+
+        if (!parsed.success) return res.status(400).json({ message: "Invalid inputs sent" });
+
         const result = await updateProductService({
-            productId: productId as string,
-            variantId: variantId as string,
-            batchId: batchId as string,
+            productId: productId as any,
+            variantId: variantId as any,
+            batchId: batchId as any,
         }, parsed.data);
 
-        return res.status(200).json({ message: 'Data Updated' });
+        return res.status(200).json({ message: 'Data Updated', data: result });
     } catch (error) {
-
+        next(error);
     }
 }
 

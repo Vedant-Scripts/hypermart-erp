@@ -1,6 +1,6 @@
-import { MovementType, Prisma } from "@prisma/client";
+import { EntityType, MovementType, Prisma } from "@prisma/client";
 import prisma from "../../../common/db.js";
-import type { ProductCreateInput, ProductUpdateInput, UpdateBatchDTO, UpdateProductDTO, UpdateVariantDTO } from "./products.type.js";
+import type { BatchUpdateInput, ProductCreateInput, ProductUpdateInput, VariantUpdateInput } from "./products.type.js";
 
 export const createProductsWithRelationsRepo = (dto: any) => {
     const data = dto as ProductCreateInput;
@@ -202,10 +202,13 @@ export const getProductByIdRepo = (productId: string) => {
     });
 }
 
-export const getProductCountByFieldRepo = (field: keyof Prisma.ProductWhereInput, value: string) => {
-    return prisma.product.count({
-        where: { [field]: value }
-    });
+export const getProductCountByFieldRepo = (field: keyof Prisma.ProductWhereInput, value: string | string[]) => {
+    const where = Array.isArray(value) ? { [field]: { in: value } } : { [field]: value };
+    if (field === 'itemCode') {
+        return prisma.itemCodeRegistry.count({ where });
+    } else {
+        return prisma.product.count({ where });
+    }
 }
 
 export const updateProductDetailsRepo = (productId: string, dto: any) => {
@@ -213,20 +216,41 @@ export const updateProductDetailsRepo = (productId: string, dto: any) => {
     return prisma.product.update({
         where: { id: productId },
         data
+    });
+}
+
+export const updateVariantDetailsRepo = (variantId: string, dto: any) => {
+    const data = dto as VariantUpdateInput;
+    return prisma.variant.update({
+        where: { id: variantId },
+        data
     })
 }
 
-export const updateVariantDetailsRepo = (variantId: string, data: any) => {
-
-}
-
-export const updateBatchDetailsRepo = (batchId: string, data: any) => {
-
+export const updateBatchDetailsRepo = (batchId: string, dto: any) => {
+    const data = dto as BatchUpdateInput;
+    return prisma.batch.update({
+        where: { id: batchId },
+        data
+    });
 }
 
 export const deleteProductWithRelations = (productId: string, data: any) => {
 
 };
+
+export const getItemCodeFromItemCodeRegistryRepo = (entityType: EntityType, entityId: string) => {
+    return prisma.itemCodeRegistry.findFirst({ where: { entityType: entityType, entityId: entityId }, select: { itemCode: true } });
+}
+
+export const checkProductFieldExistByRepo = (field: string, value: string, selectVal: string[]) => {
+    let select: Record<string, boolean> = {}
+    for (const s of selectVal) {
+        select[s] = true;
+    }
+    return prisma.product.findFirst({ where: { [field]: value }, select });
+}
+
 
 const generateBatchNo = async () => {
     const res: any = await prisma.$queryRaw`SELECT nextval('batch_no_seq') AS seq`;
