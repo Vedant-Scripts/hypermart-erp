@@ -16,7 +16,7 @@ router.get('/:id', authenticateUser, getProductByIdController);
 
 router.patch('/', authenticateUser, updateProductsByController);
 
-// router.delete('/:id', authenticateUser, deleteCategoryController);
+router.delete('/', authenticateUser, checkProductExistController);
 
 
 export default router;

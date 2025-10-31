@@ -251,6 +251,47 @@ export const checkProductFieldExistByRepo = (field: string, value: string, selec
     return prisma.product.findFirst({ where: { [field]: value }, select });
 }
 
+export const deleteVariantTransactionRepo = (variantId: string) => {
+    return prisma.$transaction(async (tx) => {
+        const variant = await tx.variant.findUnique({
+            where: { id: variantId },
+            select: { batch: true, productId: true }
+        });
+        if (!variant) return;
+
+        // computing total variant qty
+        const variantTotalQty = variant.batch.reduce((sum, b) => sum + b.availableQty, 0);
+
+        // Delete Variant (cascade handle batches)
+        await tx.variant.delete({ where: { id: variantId } });
+
+        //adjust the product's cached qty
+        await tx.product.update({
+            where: { id: variant.productId },
+            data: {
+                cachedQty: { decrement: variantTotalQty }
+            }
+        });
+
+        // Add a stock movement for audit
+        await tx.stockMovement.updateMany({
+            where: { variantId },
+            data: { isArchived: true }
+        });
+    });
+}
+
+export const deleteProductTransactionRepo = (productId: string) => {
+    return prisma.$transaction(async (tx) => {
+        await tx.stockMovement.updateMany({
+            where: { productId: productId, isArchived: false },
+            data: { isArchived: true }
+        });
+
+        // delete product (cascade handle variants and batches)
+        await tx.product.delete({ where: { id: productId } });
+    })
+}
 
 const generateBatchNo = async () => {
     const res: any = await prisma.$queryRaw`SELECT nextval('batch_no_seq') AS seq`;

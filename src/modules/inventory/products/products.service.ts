@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { generateBarcodeNo } from "../../../common/utils/barcode.utils.js";
 import { pickDefined } from "../../../common/utils/pickDefined.utils.js";
-import { checkProductFieldExistByRepo, createProductsWithRelationsRepo, getAllProductsRepo, getItemCodeFromItemCodeRegistryRepo, getProductByIdRepo, getProductCountByFieldRepo, updateBatchDetailsRepo, updateProductDetailsRepo, updateVariantDetailsRepo } from "./products.repo.js";
+import { checkProductFieldExistByRepo, createProductsWithRelationsRepo, deleteProductTransactionRepo, deleteVariantTransactionRepo, getAllProductsRepo, getItemCodeFromItemCodeRegistryRepo, getProductByIdRepo, getProductCountByFieldRepo, updateBatchDetailsRepo, updateProductDetailsRepo, updateVariantDetailsRepo } from "./products.repo.js";
 import type { CreateProductDTO, ProductUpdateInput, UpdateBatchDTO, UpdateProductDTO, UpdateVariantDTO } from "./products.type.js";
 
 export const generateBarcodeService = () => {
@@ -121,4 +121,12 @@ export const checkProductExistService = async (field: string, value: string) => 
     console.log('value: ', value);
     const checkCount = await getProductCountByFieldRepo(field as keyof Prisma.ProductWhereInput, value);
     return checkCount > 0 ? true : false;
+}
+
+export const deleteProductOrVariantService = (productId?: string, variantId?: string) => {
+    if (!productId && !variantId) throw new Error('Id is mandatory');
+
+    return productId
+        ? deleteProductTransactionRepo(productId)
+        : deleteVariantTransactionRepo(variantId!);
 }

@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { batchUpdatePayloadSchema, createProductPayloadSchema, updateProductPayloadSchema, variantUpdatePayloadSchema } from "./products.validation.js";
-import { checkProductExistService, createProductService, generateBarcodeService, getAllProductsService, getProductByIdService, updateProductService } from "./products.service.js";
+import { checkProductExistService, createProductService, deleteProductOrVariantService, generateBarcodeService, getAllProductsService, getProductByIdService, updateProductService } from "./products.service.js";
 
 
 export const generateBarcodeController = async (req: Request, res: Response, next: NextFunction) => {
@@ -98,3 +98,23 @@ export const checkProductExistController = async (req: Request, res: Response, n
     }
 }
 
+export const deleteProductController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { productId, variantId } = req.query;
+        if (!productId && !variantId) return res.status(400).json({ message: "Id is required" });
+
+        const ids = { productId, variantId };
+
+        for (const [key, value] of Object.entries(ids)) {
+            if (value !== undefined && typeof value !== 'string') {
+                return res.status(400).json({ message: `${key} must be a string` });
+            }
+        }
+
+        await deleteProductOrVariantService(productId as any, variantId as any);
+        return res.status(204).send();
+    } catch (error) {
+        next(error)
+    }
+
+}
