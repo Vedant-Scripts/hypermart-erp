@@ -1,31 +1,86 @@
 import { decodeToken, signAccessToken, signRefreshToken, verifyToken } from "../../common/auth/index.js";
 import config from "../../config/env.config.js";
-import { comparePassword, hashPassword, hashToken } from "../../common/utils/password.js";
-import { findUserByEmail, findUserById, updateUserPassword } from "../users/users.repo.js";
+import { comparePassword, hashPassword, hashToken } from "../../common/utils/password.utils.js";
+import { checkUserClientIdRepo, getUserByContactNumberRepo, getUserByEmailRepo, getUserByIdRepo, updateUserPasswordRepo } from "../users/users.repo.js";
 import type { ChangePasswordReqType, ResetPasswordReqType, SignInReqType } from "./auth.validation.js";
-import { PREFIXES, TOKEN_TYPES } from "../../common/constant.js";
-import { getRedisValue, setRedisValue } from "../../common/integrations/redis.integration.js";
+import { PREFIXES, TOKEN_TYPES } from "../../common/utils/constant.js";
+import { delRedisValue, getRedisValue, setRedisValue } from "../../common/integrations/redis.integration.js";
 import type { Response } from "express";
+import { generateOTP, sendOtpToMobile, storeOtpRedis, verifyOtpRedis } from "../../common/utils/otp.utils.js";
+import { createCustomerUserService } from "../users/users.service.js";
+import type { User } from "@prisma/client";
 
-export const signInService = async (signServiceInput: SignInReqType) => {
-    const user = await findUserByEmail(signServiceInput.identifier);
-    if (!user) throw new Error('Invalid Credentials');
+export const sendOtpService = async (sendOtpInput: SignInReqType) => {
 
-    const isValid = await comparePassword(signServiceInput.password, user.password);
-    if (!isValid) throw new Error('Invalid Credentials');
+    const otp = generateOTP();
 
-    const tokens = createTokens({ sub: user.id, role: user.role, authType: signServiceInput.authType, clientType: signServiceInput.clientType });
+    await storeOtpRedis(sendOtpInput.authType, sendOtpInput.identifier, otp);     // Save OTP to Redis
+
+    // Send Email to user using SMTP for now, later on change it to transactional AWS
+    if (sendOtpInput.authType === 'mobile_otp') {
+        await sendOtpToMobile(sendOtpInput.identifier, otp);
+    } else {
+        /** For now wait for AWS SNS */
+
+        // try {
+        //     await sendEmail({
+        //         to: sendOtpInput.identifier,
+        //         subject: "Your OTP for Ritanta Sign In",
+        //         html: otpTemplate(otp),
+        //         text: `Your OTP for Ritanta Sign In ${otp}`
+        //     });
+        // } catch (error) {
+        //     await delRedisValue(`${sendOtpInput.authType}:${sendOtpInput.identifier}`);
+        //     throw new Error('Something went wrong, email was not sent!');
+        // }
+    }
+
+    return true;
+}
+
+export const signInService = async (signServiceInput: SignInReqType, client: { clientId: string, clientCode: string }) => {
+    let user: User;
+    if (signServiceInput.authType === 'email_password') {
+        const found = await getUserByEmailRepo(signServiceInput.identifier);
+        if (!found) throw new Error('Invalid credentials');
+
+        if (!signServiceInput.password) throw new Error('Password is mandatory!');
+        const isValid = await comparePassword(signServiceInput.password, found.password!);
+        if (!isValid) throw new Error('Invalid Credentials');
+
+        user = found;
+    } else {
+        user = await verifyOtpService(signServiceInput, client.clientId);
+    }
+
+    if (user.status !== "ACTIVE") throw new Error("Account Inactive");
+    const userClientPlatformCheck = await checkUserClientIdRepo(user.id, client.clientId);
+    if (!userClientPlatformCheck) throw new Error("Account not allowed on this platform");
+
+    const tokens = createTokens({ sub: user.id, aud: client.clientCode, role: user.role, authType: signServiceInput.authType });
     // save to redis
     await saveRefreshTokenRedis(Number(user.id), tokens.refreshToken);
 
     return tokens;
 }
 
-export const refreshTokenService = async (token: string) => {
+export const refreshTokenService = async (token: string, client: { clientId: string, clientCode: string }) => {
     const decoded = decodeToken(token)
     if (!decoded || typeof decoded === 'string') throw new Error("Invalid token: cannot decode");
-    const { sub: userId, role, tokenType, authType, clientType } = decoded;
+
+    const { sub: userId, aud, role, tokenType, authType } = decoded;
     if (tokenType !== TOKEN_TYPES.REFRESH) throw new Error('Invalid token type');
+
+    if (client.clientCode !== aud) throw new Error('Refresh token audience mismatch / account not allowed on this platform');
+
+    if (!userId) throw new Error('No userId found in refresh Token');
+    const user = await getUserByIdRepo(userId);
+
+    if (!user) throw new Error('User Not Found');
+    if (user.status !== "ACTIVE") throw new Error("Account Inactive");
+
+    const userClientPlatformCheck = await checkUserClientIdRepo(user.id, client.clientId);
+    if (!userClientPlatformCheck) throw new Error('Account not allowed on this platform');
 
     const redisKey = `${PREFIXES.REFRESH_TOKEN}:${Number(userId)}`;
     const storedToken = await getRedisValue(redisKey);
@@ -38,7 +93,7 @@ export const refreshTokenService = async (token: string) => {
         throw new Error('Invalid or expired refresh token')
     }
 
-    const tokens = createTokens({ sub: userId, role, authType, clientType })
+    const tokens = createTokens({ sub: userId, aud: aud, role, authType })
     // save to redis 
     await saveRefreshTokenRedis(Number(userId), tokens.refreshToken);
     return tokens;
@@ -48,49 +103,48 @@ export const forgotPasswordService = async () => {
 
 }
 
-export const changePasswordService = async (changePasswordInput: ChangePasswordReqType, userId: number) => {
-    const user = await findUserById(userId);
+export const changePasswordService = async (changePasswordInput: ChangePasswordReqType, userId: string) => {
+    const user = await getUserByIdRepo(userId);
     if (!user) throw new Error('Invalid Credentials');
-
-    const isValid = await comparePassword(changePasswordInput.oldPassword, user.password);
+    const isValid = await comparePassword(changePasswordInput.oldPassword, user.password!);
     if (!isValid) throw new Error('Old password did not match');
 
-    if (await comparePassword(changePasswordInput.newPassword, user.password)) {
+    if (await comparePassword(changePasswordInput.newPassword, user.password!)) {
         throw new Error('New password must be different from the old password');
     }
 
     const newHashPassword = await hashPassword(changePasswordInput.newPassword);
 
-    await updateUserPassword(userId, newHashPassword);
+    await updateUserPasswordRepo(userId, newHashPassword);
 
     return { success: true };
 }
 
-export const resetPasswordService = async (resetPasswordInput: ResetPasswordReqType, userId: number) => {
-    const user = await findUserById(userId);
+export const resetPasswordService = async (resetPasswordInput: ResetPasswordReqType, userId: string) => {
+    const user = await getUserByIdRepo(userId);
     if (!user) throw new Error('Invalid Credentials');
 
-    if (await comparePassword(resetPasswordInput.newPassword, user.password)) {
+    if (await comparePassword(resetPasswordInput.newPassword, user.password!)) {
         throw new Error('New password must be different from the old password');
     }
 
     const newHashPassword = await hashPassword(resetPasswordInput.newPassword);
 
-    await updateUserPassword(userId, newHashPassword);
+    await updateUserPasswordRepo(userId, newHashPassword);
 
     return { success: true };
 }
 
 export const setCookieService = (res: Response, refreshToken: string, csrfToken: string) => {
     res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,    
+        httpOnly: true,
         secure: true,       // for https
         sameSite: "none",
         path: "/api/auth/refresh-token",
         maxAge: config.jwt.refreshExpiresIn
     });
     res.cookie("csrfToken", csrfToken, {
-        httpOnly: false,    
+        httpOnly: false,
         secure: true,       // for https
         sameSite: "none",
         path: '/',
@@ -111,4 +165,32 @@ const saveRefreshTokenRedis = async (userId: number, refreshToken: string) => {
     const key = `${PREFIXES.REFRESH_TOKEN}:${userId}`;
     const value = hashToken(refreshToken);
     return await setRedisValue(key, config.jwt.refreshExpiresIn, value);       // store refresh-token in redis
+}
+
+const verifyOtpService = async (signServiceInput: SignInReqType, clientId: string): Promise<User> => {
+
+    if (!signServiceInput.otp) throw new Error("Please provide valid OTP");
+
+    const result = await verifyOtpRedis(
+        signServiceInput.authType,
+        signServiceInput.identifier,
+        signServiceInput.otp
+    );
+
+    if (!result.success) {
+        const message = result.reason === "expired" ? "OTP has expired" : "Invalid OTP";
+        throw new Error(message);
+    }
+
+    const existingUser = (signServiceInput.authType === 'mobile_otp')
+        ? await getUserByContactNumberRepo(signServiceInput.identifier)
+        : await getUserByEmailRepo(signServiceInput.identifier);
+
+    if (existingUser) return existingUser;
+
+    const createdUser = (signServiceInput.authType === 'mobile_otp')
+        ? await createCustomerUserService(signServiceInput.identifier, 'mobile')
+        : await createCustomerUserService(signServiceInput.identifier, 'email');
+
+    return createdUser;
 }

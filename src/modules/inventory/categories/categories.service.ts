@@ -1,4 +1,4 @@
-import { pickDefined } from "../../../common/utils/pickDefined.js";
+import { pickDefined } from "../../../common/utils/pickDefined.utils.js";
 import { createCategoryRepo, deleteCategoryRepo, getAllCategoriesRepo, getCategoryByIdRepo, getCategoryByNameRepo, updateCategoryRepo } from "./categories.repo.js";
 import type { CategoryUpdateInput, CreateCategoryDTO, updateCategoryDTO } from "./categories.type.js";
 
@@ -11,7 +11,7 @@ export const createCategoryService = async (data: CreateCategoryDTO) => {
 }
 
 
-export const updateCategoryService = async (categoryId: number, data: updateCategoryDTO) => {
+export const updateCategoryService = async (categoryId: string, data: updateCategoryDTO) => {
     const existing = await getCategoryByIdRepo(categoryId);
     if (!existing) throw new Error('Category Not Found');
 
@@ -25,7 +25,7 @@ export const updateCategoryService = async (categoryId: number, data: updateCate
     return await updateCategoryRepo(categoryId, prismaData);
 }
 
-export const getCategoryByIdService = async (categoryId: number) => {
+export const getCategoryByIdService = async (categoryId: string) => {
     return await getCategoryByIdRepo(categoryId);
 }
 
@@ -35,7 +35,7 @@ export const getAllCategoriesService = async () => {
 
 // used category logic build after product
 
-export const deleteCategoryService = async (categoryId: number) => {
+export const deleteCategoryService = async (categoryId: string) => {
     // will first check the used category then would delete it
 
     const existing = await getCategoryByIdRepo(categoryId);

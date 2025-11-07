@@ -5,7 +5,7 @@ export const createUnitRepo = async (data: UnitCreateInput) => {
     return await prisma.unit.create({ data });
 };
 
-export const updateUnitRepo = async (unitId: number, data: UnitUpdateInput) => {
+export const updateUnitRepo = async (unitId: string, data: UnitUpdateInput) => {
     return await prisma.unit.update({
         where: {
             id: unitId
@@ -14,7 +14,7 @@ export const updateUnitRepo = async (unitId: number, data: UnitUpdateInput) => {
     });
 };
 
-export const getUnitByIdRepo = async (unitId: number) => {
+export const getUnitByIdRepo = async (unitId: string) => {
     return await prisma.unit.findUnique({ where: { id: unitId } });
 };
 
@@ -30,6 +30,6 @@ export const getAllUnitsRepo = async () => {
     return await prisma.unit.findMany();
 };
 
-export const deleteUnitRepo = async (unitId: number) => {
+export const deleteUnitRepo = async (unitId: string) => {
     return await prisma.unit.delete({ where: { id: unitId } });
 };

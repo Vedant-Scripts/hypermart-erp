@@ -13,70 +13,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ======================= MODULE : AUTH / USERS =======================
-model User {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  userType UserType @map("user_type")
-  role     Role
-
-  firstName     String  @map("first_name")
-  lastName      String? @map("last_name")
-  email         String? @unique
-  contactNumber String? @unique @map("contact_number")
-  gender        Gender? @map("gender")
-
-  // Shared address fields (for both app users & employees)
-  address String? @map("address")
-  country String? @map("country")
-  state   String? @map("state")
-  city    String? @map("city")
-
-  password String  @map("password") // nullable if OTP/OAuth
-  isActive Boolean @default(true) @map("is_active")
-
-  // Relations
-  employeeProfile        EmployeeProfile?
-  createdBarcodeSettings BarcodeSetting[] @relation("BarcodeSettingCreator")
-  updatedBarcodeSettings BarcodeSetting[] @relation("BarcodeSettingUpdator")
-
-  @@index([role])
-  @@index([userType])
-  @@map("user")
-}
-
-model EmployeeProfile {
-  id                       Int       @id @default(autoincrement())
-  userId                   Int       @unique @map("user_id")
-  empCode                  String?   @map("emp_code")
-  dateOfBirth              DateTime? @map("date_of_birth")
-  joiningDate              DateTime? @map("joining_date")
-  shift                    Shift?    @map("shift")
-  emergencyContactName     String?   @map("emergency_contact_name")
-  emergencyContactRelation String?   @map("emergency_contact_relation")
-  emergencyContactNumber   String?   @map("emergency_contact_number")
-  bankName                 String?   @map("bank_name")
-  bankAccountNumber        String?   @map("bank_account_number")
-  bankIfscCode             String?   @map("bank_ifsc_code")
-  bankBranch               String?   @map("bank_branch")
-
-  // Relations
-  user User @relation(fields: [userId], references: [id])
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@index([userId])
-  @@index([empCode])
-  @@map("employee_profile")
-}
-
-enum UserType {
-  APP_USER
-  ERP_USER
-}
+// =============================== ENUMS =========================================
 
 enum Gender {
   MALE
@@ -94,23 +31,143 @@ enum Role {
   MANAGER
   EMPLOYEE
   USER
+  DELIVERY_PERSON
 }
 
 enum ContactType {
   CUSTOMER
   SUPPLIER
-  VENDOR
-  OTHER
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  PENDING
+  SUSPENDED
+  DELETED
+}
+
+enum ProductType {
+  SINGLE
+  VARIANT
+}
+
+enum EntityType {
+  PRODUCT
+  VARIANT
+}
+
+enum MovementType {
+  PURCHASE
+  SALE
+  RETURN
+  ADJUSTMENT_IN
+  ADJUSTMENT_OUT
+}
+
+// ========================== MODULE : AUTH / USERS ===========================
+model User {
+  id            String    @id @default(cuid())
+  role          Role
+  firstName     String?   @map("first_name")
+  lastName      String?   @map("last_name")
+  email         String? // unique where deleted at is null
+  contactNumber String?   @map("contact_number") // unique where deleted at is null
+  gender        Gender?   @map("gender")
+  password      String?   @map("password") // nullable if OTP/OAuth
+  status        Status    @default(ACTIVE)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  allowedClients         UserAllowedClient[]
+  employeeProfile        EmployeeProfile?
+  addresses              Address[]
+  createdBarcodeSettings BarcodeSetting[]    @relation("BarcodeSettingCreator")
+  updatedBarcodeSettings BarcodeSetting[]    @relation("BarcodeSettingUpdator")
+
+  @@index([role])
+  // @@index([userType])
+  @@map("user")
+}
+
+model EmployeeProfile {
+  id                       String    @id @default(cuid())
+  userId                   String    @unique @map("user_id")
+  dateOfBirth              DateTime? @map("date_of_birth")
+  joiningDate              DateTime? @map("joining_date")
+  shift                    Shift?    @map("shift")
+  emergencyContactName     String?   @map("emergency_contact_name")
+  emergencyContactRelation String?   @map("emergency_contact_relation")
+  emergencyContactNumber   String?   @map("emergency_contact_number")
+  bankName                 String?   @map("bank_name")
+  bankAccountNumber        String?   @map("bank_account_number")
+  bankIfscCode             String?   @map("bank_ifsc_code")
+  bankBranch               String?   @map("bank_branch")
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @updatedAt @map("updated_at")
+  deletedAt                DateTime? @map("deleted_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("employee_profile")
+}
+
+model Address {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  label     String? // e.g., "Home", "Work"
+  line1     String?
+  line2     String?
+  city      String?
+  state     String?
+  country   String?
+  pincode   String?
+  latitude  Float?
+  longitude Float?
+  isDefault Boolean?  @default(false)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("address")
+}
+
+model Client {
+  id        String              @id @default(cuid())
+  clientId  String              @unique @map("client_id")
+  name      String
+  secret    String?
+  users     UserAllowedClient[]
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  @@map("platform_clients")
+}
+
+model UserAllowedClient {
+  userId   String @map("user_id")
+  clientId String @map("client_id")
+
+  user   User   @relation(fields: [userId], references: [id])
+  client Client @relation(fields: [clientId], references: [id])
+
+  @@id([userId, clientId])
+  @@map("user_allowed_client")
 }
 
 // ================ MODULE : BARCODE / PRODUCTS / CATEGORY / BRANDS / UNITS /  ============================================
 model BarcodeSetting {
-  id            Int      @id @default(autoincrement())
+  id            String   @id @default(cuid())
   barcodePrefix String   @map("barcode_prefix")
   barcodeSeries BigInt   @unique @map("barcode_series")
-  isDefault     Boolean  @default(true) @map("is_default")
-  createdBy     Int      @map("created_by")
-  updatedBy     Int?     @map("updated_by")
+  isDefault     Boolean  @unique @default(true) @map("is_default")
+  createdBy     String   @map("created_by")
+  updatedBy     String?  @map("updated_by")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
@@ -121,64 +178,230 @@ model BarcodeSetting {
 }
 
 model Category {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(cuid())
   name        String   @unique
   description String?
-  isActive    Boolean  @default(true) @map("is_active")
+  status      Status   @default(ACTIVE)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
+
+  subCategories Subcategory[]
+  products      Product[]
 
   @@index([name])
   @@map("category") // table name
 }
 
-model Brand {
-  id          Int      @id @default(autoincrement())
+model Subcategory {
+  id          String   @id @default(cuid())
+  categoryId  String   @map("category_id")
   name        String   @unique
   description String?
-  isActive    Boolean  @default(true) @map("is_active")
+  status      Status   @default(ACTIVE)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
+
+  products Product[]
+
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@index([name])
+  @@map("subcategory") // table name
+}
+
+model Brand {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  status      Status   @default(ACTIVE)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  products Product[]
 
   @@index([name])
   @@map("brand") // table name
 }
 
 model Unit {
-  id        Int      @id @default(autoincrement())
-  unitName      String   @unique @map("unit_name")
+  id        String   @id @default(cuid())
+  unitName  String   @unique @map("unit_name")
   unitCode  String   @unique @map("unit_code")
-  isActive  Boolean  @default(true) @map("is_active")
+  status    Status   @default(ACTIVE)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
+  products Product[]
 
   @@index([unitName])
   @@map("unit") // table name
 }
 
-// model Product {
-//   id            Int         @id @default(autoincrement())
-//   itemCode      String      @unique
-//   productName   String
-//   printName     String?
-//   productType   ProductType
-//   categoryId    Int
-//   category      Category    @relation(fields: [categoryId], references: [id])
-//   subCategoryId 
-//   description   String?
-//   shortDesc     String?
-//   slug          String?     @unique // optional, only if e-commerce needed
+model itemCodeRegistry {
+  id         String     @id @default(cuid())
+  itemCode   String     @unique @map("item_code")
+  entityType EntityType @map("entity_type")
+  entityId   String     @map("entity_id")
+  createdAt  DateTime   @default(now())
 
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
+  @@index([itemCode])
+  @@map("item_code_registry")
+}
 
-// enum ProductType {
-//   SINGLE
-//   VARIANT
-// }
+model Product {
+  id            String      @id @default(cuid())
+  itemCode      String?     @map("item_code")
+  productName   String      @map("product_name")
+  printName     String      @map("print_name")
+  productType   ProductType @map("product_type")
+  categoryId    String      @map("category_id")
+  subcategoryId String?     @map("subcategory_id")
+  brandId       String      @map("brand_id")
+  unitId        String      @map("unit_id")
+  hsnCode       String?     @map("hsn_code")
 
-// enum ExpiryCalcType {
-//   MFG
-//   PURCHASE
-// }
+  purchaseTax          String  @map("purchase_tax")
+  salesTax             String  @map("sales_tax")
+  purchaseTaxIncluding Boolean @default(false) @map("purchase_tax_including")
+  salesTaxIncluding    Boolean @default(true) @map("sales_tax_including")
+
+  manageMultipleBatch Boolean @default(true) @map("manage_multiple_batch")
+  hasExpiry           Boolean @default(true) @map("has_expiry")
+
+  description String? @map("description")
+  shortDesc   String? @map("short_desc")
+
+  cachedQty Int @default(0) @map("cached_qty")
+
+  variants       Variant[]
+  batch          Batch[]
+  stockMovements StockMovement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relations
+  category    Category     @relation(fields: [categoryId], references: [id])
+  subcategory Subcategory? @relation(fields: [subcategoryId], references: [id])
+  brand       Brand        @relation(fields: [brandId], references: [id])
+  unit        Unit         @relation(fields: [unitId], references: [id])
+
+  @@index([productName])
+  @@index([brandId])
+  @@index([categoryId])
+  @@map("product")
+}
+
+model Variant {
+  id          String @id @default(cuid())
+  productId   String @map("product_id")
+  itemCode    String @map("item_code")
+  variantName String @map("variant_name")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cachedQty Int @default(0) @map("cached_qty")
+
+  batch          Batch[]
+  stockMovements StockMovement[]
+
+  //relations
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("variant")
+}
+
+model Batch {
+  id        String  @id @default(cuid())
+  productId String? @map("product_id")
+  variantId String? @map("variant_id")
+  batchNo   String  @unique @map("batch_no")
+
+  mfgDate DateTime? @map("mfg_date")
+  expDate DateTime? @map("exp_date")
+  expDays Int?      @map("exp_days")
+
+  purchasePrice   Decimal @map("purchase_price") @db.Decimal(10, 2)
+  landingCost     Decimal @map("landing_cost") @db.Decimal(10, 2)
+  mrp             Decimal @map("mrp") @db.Decimal(10, 2)
+  sellingDiscount Decimal @map("selling_discount") @db.Decimal(6, 2)
+  sellingPrice    Decimal @map("selling_price") @db.Decimal(10, 2)
+  sellingMargin   Decimal @map("selling_margin") @db.Decimal(6, 2)
+
+  availableQty Int @default(0) @map("available_qty")
+  receivedQty  Int @default(0) @map("received_qty")
+
+  // metadata
+  supplierId     String? @map("supplier_id")
+  supplierBillId String? @map("supplier_bill_id")
+  // add purchaseBillid relation when create that model
+
+  // timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // relations
+  product       Product?           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant       Variant?           @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  supplier      ContactManagement? @relation(fields: [supplierId], references: [id])
+  StockMovement StockMovement[]
+
+  @@map("batch")
+}
+
+model StockMovement {
+  id            String       @id @default(cuid())
+  productId     String       @map("product_id")
+  variantId     String?      @map("variant_id")
+  batchId       String       @map("batch_id")
+  type          MovementType
+  qty           Int
+  unitPrice     Decimal?     @map("unit_price") @db.Decimal(10, 2)
+  referenceType String?      @map("reference_type") // e.g., "supplier_bill", "sale", "adjustment"
+  referenceId   String?      @map("reference_id") // e.g., supplierBillId or saleId
+  createdBy     String?      @map("created_by")
+  createdAt     DateTime     @default(now())
+  isArchived      Boolean      @default(false) @map("is_archived")
+
+  //relations
+  product Product  @relation(fields: [productId], references: [id])
+  variant Variant? @relation(fields: [variantId], references: [id])
+  batch   Batch    @relation(fields: [batchId], references: [id])
+
+  @@index([productId])
+  @@index([variantId])
+  @@index([batchId])
+  @@map("stock_movement")
+}
+
+// =================================== Contact Management ========================================================
+
+model ContactManagement {
+  id            String      @id @default(cuid())
+  type          ContactType
+  name          String?
+  email         String?     @map("email")
+  contactNumber String?     @unique @map("contact_number")
+  companyName   String?     @map("company_name")
+  gstin         String?     @map("gstin")
+  address       String?     @map("address")
+  city          String?     @map("city")
+  state         String?     @map("state")
+  country       String?     @map("country")
+  pincode       Int?        @map("pincode")
+
+  bankName    String? @map("bank_name")
+  branchName  String? @map("branch_name")
+  ifscCode    String? @map("ifsc_code")
+  accountName String? @map("account_name")
+
+  status    Status   @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  batch     Batch[]
+
+  @@index([type])
+  @@map("contact_management")
+}

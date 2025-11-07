@@ -1,4 +1,4 @@
-import { pickDefined } from "../../../common/utils/pickDefined.js";
+import { pickDefined } from "../../../common/utils/pickDefined.utils.js";
 import { createUnitRepo, deleteUnitRepo, getAllUnitsRepo, getUnitByCodeRepo, getUnitByIdRepo, getUnitByNameRepo, updateUnitRepo } from "./units.repo.js";
 import type { UnitUpdateInput, CreateUnitDTO, updateUnitDTO } from "./units.type.js";
 
@@ -14,7 +14,7 @@ export const createUnitService = async (data: CreateUnitDTO) => {
 }
 
 
-export const updateUnitService = async (unitId: number, data: updateUnitDTO) => {
+export const updateUnitService = async (unitId: string, data: updateUnitDTO) => {
     const existing = await getUnitByIdRepo(unitId);
     if (!existing) throw new Error('Unit Not Found');
 
@@ -33,7 +33,7 @@ export const updateUnitService = async (unitId: number, data: updateUnitDTO) => 
     return await updateUnitRepo(unitId, prismaData);
 }
 
-export const getUnitByIdService = async (unitId: number) => {
+export const getUnitByIdService = async (unitId: string) => {
     return await getUnitByIdRepo(unitId);
 }
 
@@ -43,7 +43,7 @@ export const getAllUnitsService = async () => {
 
 // used unit logic build after product
 
-export const deleteUnitService = async (unitId: number) => {
+export const deleteUnitService = async (unitId: string) => {
     // will first check the used unit then would delete it
 
     const existing = await getUnitByIdRepo(unitId);

@@ -21,9 +21,10 @@ export const createBrandController = async (req: Request, res: Response, next: N
 
 export const getBrandByIdController = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const brandId: number = Number(req.params.id);
-        const brand: BrandResponseDTO | null = await getBrandByIdService(brandId);
+        const brandId = req.params.id;
+        if (!brandId) return res.status(400).json({ message: "Brand id is required" });
 
+        const brand: BrandResponseDTO | null = await getBrandByIdService(brandId);
         if (!brand) return res.status(404).json({ message: "Brand not found" });
 
         return res.status(200).json({ message: "Brand found", data: brand });
@@ -48,11 +49,12 @@ export const getAllBrandsController = async (req: Request, res: Response, next: 
 export const updateBrandController = async (req: Request, res: Response, next: NextFunction) => {
     try {
         // validate with zod
+        const brandId = req.params.id;
+        if (!brandId) return res.status(400).json({ message: "Brand id is required" });
 
         const parsed = updateBrandSchema.safeParse(req.body);
-        const brandId: number = Number(req.params.id);
-
         if (!parsed.success) return res.status(400).json({ errors: parsed.error });
+
         // call service 
         const brand: BrandResponseDTO = await updateBrandService(brandId, parsed.data);
 
@@ -69,7 +71,9 @@ export const checkUsedBrandController = (req: Request, res: Response, next: Next
 
 export const deleteBrandController = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const brandId: number = Number(req.params.id);
+        const brandId = req.params.id;
+        if (!brandId) return res.status(400).json({ message: "Brand id is required" });
+
         await deleteBrandService(brandId);
         return res.status(204).send();
     } catch (error) {

@@ -1,26 +1,66 @@
 import type { Request, Response, NextFunction } from "express";
 import { changePasswordSchema, forgotPasswordSchema, resetPasswordSchema, signInSchema, type ChangePasswordReqType, type ResetPasswordReqType, type SignInReqType } from "./auth.validation.js";
-import { changePasswordService, refreshTokenService, resetPasswordService, setCookieService, signInService } from "./auth.service.js";
-import { csrfTokenGenerate } from "../../common/utils/password.js";
+import { changePasswordService, refreshTokenService, resetPasswordService, sendOtpService, setCookieService, signInService } from "./auth.service.js";
+import { csrfTokenGenerate } from "../../common/utils/password.utils.js";
 
-export const signInController = async (req: Request, res: Response, next: NextFunction) => {
+export const sendOtpController = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const { clientCode } = res.locals.client;
+        if (clientCode !== 'customer_app') return res.status(403).json({ message: "Forbidden Request" });
+
         const parsed = signInSchema.safeParse(req.body);
         if (!parsed.success) {
             // validation failed
             return res.status(400).json({ errors: parsed.error });
         }
-        const signServiceInput: SignInReqType = parsed.data;
-        const result = await signInService(signServiceInput);
-        const csrfToken = csrfTokenGenerate();
-        setCookieService(res, result.refreshToken, csrfToken);
+        const sendOtpInput = parsed.data as SignInReqType;
+        if (sendOtpInput.authType === 'email_password') return res.status(400).json({ message: "Auth type is invalid" });
+
+        await sendOtpService(sendOtpInput);
+
+        res.json({ message: "OTP sent" });
+    } catch (error) {
+        next(error)
+    }
+}
+
+
+export const signInController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { clientCode } = res.locals.client;
+        const parsed = signInSchema.safeParse(req.body);
+        if (!parsed.success) return res.status(400).json({ errors: parsed.error });
+
+        const signServiceInput = parsed.data as SignInReqType;
+
+        if ((signServiceInput.authType === 'mobile_otp' || signServiceInput.authType === 'email_otp') && clientCode !== 'customer_app') return res.status(403).json({ error: 'OTP-based sign-in is only supported on the Customer App.' });
+        if ((signServiceInput.authType === 'email_password') && (clientCode !== 'erp_web' && clientCode !== 'delivery_app')) return res.status(403).json({ error: 'Password sign-in is only supported on ERP Web and Delivery App.' });
+
+        const result = await signInService(signServiceInput, res.locals.client);
+
+        if (clientCode === 'erp_web') {
+            // response for the web apps
+            const csrfToken = csrfTokenGenerate();
+            setCookieService(res, result.refreshToken, csrfToken);
+            return res.status(200).json({
+                message: 'Login Successfull',
+                data: {
+                    accessToken: result.accessToken,
+                    accessTokenExpiresIn: result.accessTokenExpiresIn
+                },
+            });
+        }
+        // below response is for the mobile apps
         res.status(200).json({
             message: 'Login Successfull',
             data: {
                 accessToken: result.accessToken,
-                accessTokenExpiresIn: result.accessTokenExpiresIn
+                accessTokenExpiresIn: result.accessTokenExpiresIn,
+                refreshToken: result.refreshToken,
+                refreshTokenExpiresIn: result.refreshTokenExpiresIn
             },
         });
+
     } catch (error) {
         next(error);
     }
@@ -33,16 +73,34 @@ export const refreshTokenController = async (req: Request, res: Response, next: 
         if (!csrfHeader || !csrfCookie || csrfHeader !== csrfCookie) {
             return res.status(403).json({ message: 'CSRF token mismatch' });
         }
+
         const refreshToken = req.cookies.refreshToken;
         if (!refreshToken) return res.status(401).json({ error: "Missing refresh token" });
-        const result = await refreshTokenService(refreshToken);
-        const csrfToken = csrfTokenGenerate();
-        setCookieService(res, result.refreshToken, csrfToken);
+
+        const result = await refreshTokenService(refreshToken, res.locals.client);
+
+        const { clientCode } = res.locals.client;
+
+        if (clientCode === 'erp_web') {
+            // response for the web apps
+            const csrfToken = csrfTokenGenerate();
+            setCookieService(res, result.refreshToken, csrfToken);
+            return res.status(200).json({
+                message: 'Token refreshed Successfully',
+                data: {
+                    accessToken: result.accessToken,
+                    accessTokenExpiresIn: result.accessTokenExpiresIn
+                }
+            });
+        }
+        // below response is for the mobile apps
         res.status(200).json({
             message: 'Token refreshed Successfully',
             data: {
                 accessToken: result.accessToken,
-                accessTokenExpiresIn: result.accessTokenExpiresIn
+                accessTokenExpiresIn: result.accessTokenExpiresIn,
+                refreshToken: result.refreshToken,
+                refreshTokenExpiresIn: result.refreshTokenExpiresIn
             }
         });
     } catch (error) {
@@ -53,6 +111,9 @@ export const refreshTokenController = async (req: Request, res: Response, next: 
 
 export const forgotPasswordController = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const { clientCode } = res.locals.client;
+        if (clientCode !== 'erp_web') return res.status(403).json({ message: "Forbidden Request" });
+
         const parsed = forgotPasswordSchema.safeParse(req.body);
         if (!parsed.success) {
             return res.status(400).json({ errors: parsed.error });
@@ -64,8 +125,10 @@ export const forgotPasswordController = async (req: Request, res: Response, next
     }
 }
 
-export const changePassword = async (req: Request, res: Response, next: NextFunction) => {
+export const changePasswordController = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const { clientCode } = res.locals.client;
+        if (clientCode !== 'erp_web') return res.status(403).json({ message: "Forbidden Request" });
         const { sub: userId } = res.locals.user;
         const parsed = changePasswordSchema.safeParse(req.body);
         if (!parsed.success) {
@@ -79,8 +142,10 @@ export const changePassword = async (req: Request, res: Response, next: NextFunc
     }
 }
 
-export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+export const resetPasswordController = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const { clientCode } = res.locals.client;
+        if (clientCode !== 'erp_web') return res.status(403).json({ message: "Forbidden Request" });
         const { sub: userId } = res.locals.user;
         const parsed = resetPasswordSchema.safeParse(req.body);
         if (!parsed.success) {

@@ -1,20 +1,20 @@
 import { Router } from "express";
-import { authenticate } from "../../../common/auth/guards.auth.js";
+import { authenticateUser } from "../../../common/auth/guards.auth.js";
 import { checkUsedBrandController, createBrandController, deleteBrandController, getAllBrandsController, getBrandByIdController, updateBrandController } from "./brands.controller.js";
 
 const router = Router();
 
-router.post('/', authenticate, createBrandController);
+router.post('/', authenticateUser, createBrandController);
 
-router.get('/data', authenticate, getAllBrandsController);
+router.get('/data', authenticateUser, getAllBrandsController);
 
-router.get('/check-used', authenticate, checkUsedBrandController);
+router.get('/check-used', authenticateUser, checkUsedBrandController);
 
-router.get('/:id', authenticate, getBrandByIdController);
+router.get('/:id', authenticateUser, getBrandByIdController);
 
-router.patch('/:id', authenticate, updateBrandController);
+router.patch('/:id', authenticateUser, updateBrandController);
 
-router.delete('/:id', authenticate, deleteBrandController);
+router.delete('/:id', authenticateUser, deleteBrandController);
 
 
 export default router;

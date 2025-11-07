@@ -1,9 +1,10 @@
 import { z } from "zod/v4";
+import { Status } from "@prisma/client";
 
 export const createBrandSchema = z.object({
     name: z.string().trim().toUpperCase().min(1, { error: "Brand name is required" }),
     description: z.string().nullable(),
-    isActive: z.boolean().default(true)
+    status: z.enum(Status).default("ACTIVE")
 });
 
 export const updateBrandSchema = createBrandSchema.partial();

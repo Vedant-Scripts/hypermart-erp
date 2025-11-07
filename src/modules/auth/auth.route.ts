@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { signInController, resetPassword, refreshTokenController, forgotPasswordController, changePassword } from './auth.controller.js';
-import { authenticate } from '../../common/auth/guards.auth.js';
+import { signInController, refreshTokenController, forgotPasswordController, changePasswordController, resetPasswordController, sendOtpController } from './auth.controller.js';
+import { authenicateClient, authenticateUser } from '../../common/auth/guards.auth.js';
 
 const router = Router();
 
-// router.post('/sign-up', passwordSignIn)
+router.post('/send-otp', sendOtpController);
 
 router.post('/login', signInController);
 
@@ -12,8 +12,8 @@ router.post('/refresh-token', refreshTokenController);
 
 router.post('/forgot-password', forgotPasswordController);      // needs email to do it
 
-router.patch('/change-password', authenticate, changePassword);
+router.patch('/change-password', authenticateUser, changePasswordController);
 
-router.patch('/reset-password', resetPassword);
+router.patch('/reset-password', resetPasswordController);
 
 export default router;

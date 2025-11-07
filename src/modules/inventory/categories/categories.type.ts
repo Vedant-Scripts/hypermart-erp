@@ -14,10 +14,10 @@ export type updateCategoryDTO = UpdateCategoryInput;
 
 // Response DTOs
 export type CategoryResponseDTO = {
-    id: number;
+    id: string;
     name: string;
     description?: string | null;
-    isActive: boolean;
+    status: string;
     createdAt: Date;
     updatedAt: Date;
 }

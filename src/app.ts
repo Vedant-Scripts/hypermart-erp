@@ -5,7 +5,10 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 
 import auth from './modules/auth/index.js';
-import { brandRouter, categoryRouter, unitRouter } from './modules/inventory/index.js';
+import { brandRouter, categoryRouter, productRouter, subcategoryRouter, unitRouter } from './modules/inventory/index.js';
+import { contactRouter } from './modules/contacts/index.js';
+import { userRouter } from './modules/users/index.js';
+import { authenicateClient } from './common/auth/guards.auth.js';
 
 const app = express();
 
@@ -19,6 +22,7 @@ app.use(cors({
 app.use(helmet());
 app.use(morgan('dev'));
 
+app.use(authenicateClient); // client platform mandatory checking 
 
 app.get('/', (req, res) => {
     res.send('BasketFull backend is running on EC2 server...');
@@ -27,8 +31,12 @@ app.get('/', (req, res) => {
 // app routes 
 app.use(auth.prefix, auth.router);
 app.use(categoryRouter.prefix, categoryRouter.router);
+app.use(subcategoryRouter.prefix, subcategoryRouter.router);
 app.use(brandRouter.prefix, brandRouter.router);
 app.use(unitRouter.prefix, unitRouter.router);
+app.use(contactRouter.prefix, contactRouter.router);
+app.use(userRouter.prefix, userRouter.router);
+app.use(productRouter.prefix, productRouter.router);
 
 // 404 handler
 app.use((req, res, next) => {

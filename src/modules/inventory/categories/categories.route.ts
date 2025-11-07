@@ -1,20 +1,20 @@
 import { Router } from "express";
-import { authenticate } from "../../../common/auth/guards.auth.js";
+import { authenticateUser } from "../../../common/auth/guards.auth.js";
 import { checkUsedCategoryController, createCategoryController, deleteCategoryController, getAllCategoriesController, getCategoryByIdController, updateCategoryController } from "./categories.controller.js";
 
 const router = Router();
 
-router.post('/', authenticate, createCategoryController);
+router.post('/', authenticateUser, createCategoryController);
 
-router.get('/data', authenticate, getAllCategoriesController);
+router.get('/data', authenticateUser, getAllCategoriesController);
 
-router.get('/check-used', authenticate, checkUsedCategoryController);
+router.get('/check-used', authenticateUser, checkUsedCategoryController);
 
-router.get('/:id', authenticate, getCategoryByIdController);
+router.get('/:id', authenticateUser, getCategoryByIdController);
 
-router.patch('/:id', authenticate, updateCategoryController);
+router.patch('/:id', authenticateUser, updateCategoryController);
 
-router.delete('/:id', authenticate, deleteCategoryController);
+router.delete('/:id', authenticateUser, deleteCategoryController);
 
 
 export default router;
