@@ -2,8 +2,8 @@ import type { Prisma } from "@prisma/client";
 import type {  CreateSubcategoryInput, UpdateSubcategoryInput } from "./subcategories.validation.js";
 
 // this are for repo usage
-export type SubcategoryCreateInput = Prisma.SubCategoryCreateInput;
-export type SubcategoryUpdateInput = Prisma.SubCategoryUpdateInput;
+export type SubcategoryCreateInput = Prisma.SubcategoryCreateInput;
+export type SubcategoryUpdateInput = Prisma.SubcategoryUpdateInput;
 
 
 // For api payloads
