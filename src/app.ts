@@ -9,6 +9,7 @@ import { brandRouter, categoryRouter, productRouter, subcategoryRouter, unitRout
 import { contactRouter } from './modules/contacts/index.js';
 import { userRouter } from './modules/users/index.js';
 import { authenicateClient } from './common/auth/guards.auth.js';
+import { purchaseBillRouter } from './modules/purchase/index.js';
 
 const app = express();
 
@@ -22,11 +23,11 @@ app.use(cors({
 app.use(helmet());
 app.use(morgan('dev'));
 
-app.use(authenicateClient); // client platform mandatory checking 
-
 app.get('/', (req, res) => {
     res.send('BasketFull backend is running on EC2 server...');
 });
+
+app.use(authenicateClient); // client platform mandatory checking 
 
 // app routes 
 app.use(auth.prefix, auth.router);
@@ -37,6 +38,7 @@ app.use(unitRouter.prefix, unitRouter.router);
 app.use(contactRouter.prefix, contactRouter.router);
 app.use(userRouter.prefix, userRouter.router);
 app.use(productRouter.prefix, productRouter.router);
+app.use(purchaseBillRouter.prefix, purchaseBillRouter.router);
 
 // 404 handler
 app.use((req, res, next) => {

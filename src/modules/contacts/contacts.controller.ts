@@ -41,9 +41,10 @@ export const getAllContactsByContactTypeController = async (req: Request, res: R
 
         const contact: ContactResponseDTO[] | [] = await getAllContactsByContactTypeService(contactType);
 
-        if (!contact) return res.status(404).json({ message: "Contact not found" });
-
-        return res.status(200).json({ message: "Contact found", data: contact });
+        return res.status(200).json({
+            message: (contact.length !== 0) ? 'Contact found' : 'No Data Found',
+            data: contact
+        })
     } catch (error) {
         next(error);
     }

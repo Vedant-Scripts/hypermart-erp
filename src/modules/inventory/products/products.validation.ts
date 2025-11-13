@@ -13,7 +13,7 @@ export const batchPayloadSchema = z.object({
     sellingMargin: z.number().nonnegative(),
     availableQty: z.number().int().nonnegative().default(0),
     supplierId: z.string().nullable(),
-    supplierBillId: z.string().nullable(),
+    purchaseBillId: z.string().nullable(),
 });
 
 export const variantPayloadSchema = z.object({

@@ -74,7 +74,7 @@ export const createProductsWithRelationsRepo = (dto: any) => {
                     availableQty: batch.availableQty,
                     receivedQty: batch.availableQty,
                     supplierId: batch.supplierId ?? null,
-                    supplierBillId: batch.supplierBillId ?? null
+                    purchaseBillId: batch.purchaseBillId ?? null
                 }
             });
 
@@ -85,7 +85,7 @@ export const createProductsWithRelationsRepo = (dto: any) => {
                         productId: product.id,
                         variantId: variantId ?? null,
                         batchId: createBatch.id,
-                        type: MovementType.PURCHASE,
+                        type: MovementType.ADJUSTMENT_IN,
                         qty: createBatch.availableQty,
                         unitPrice: batch.purchasePrice,
                         referenceType: 'adjustment',
@@ -211,6 +211,16 @@ export const getProductCountByFieldRepo = (field: keyof Prisma.ProductWhereInput
     }
 }
 
+export const checkFieldsInItemCodeRegistryRepo = (entityType: 'PRODUCT' | 'VARIANT', field: keyof Prisma.itemCodeRegistryWhereInput, value: string | string[]) => {
+    const where = Array.isArray(value) ? { [field]: { in: value }, entityType } : { [field]: value, entityType };
+    return prisma.itemCodeRegistry.count({ where });
+}
+
+export const checkBatchCountsRepo = (bIds: string | string[]) => {
+    const where = Array.isArray(bIds) ? { id: { in: bIds } } : { id: bIds }
+    return prisma.batch.count({ where });
+}
+
 export const updateProductDetailsRepo = (productId: string, dto: any) => {
     const data = dto as ProductUpdateInput;
     return prisma.product.update({
@@ -234,10 +244,6 @@ export const updateBatchDetailsRepo = (batchId: string, dto: any) => {
         data
     });
 }
-
-export const deleteProductWithRelations = (productId: string, data: any) => {
-
-};
 
 export const getItemCodeFromItemCodeRegistryRepo = (entityType: EntityType, entityId: string) => {
     return prisma.itemCodeRegistry.findFirst({ where: { entityType: entityType, entityId: entityId }, select: { itemCode: true } });
@@ -293,7 +299,7 @@ export const deleteProductTransactionRepo = (productId: string) => {
     })
 }
 
-const generateBatchNo = async () => {
+export const generateBatchNo = async () => {
     const res: any = await prisma.$queryRaw`SELECT nextval('batch_no_seq') AS seq`;
     const nextNumber = res[0].seq; // say 42
     const batchNo = `B${nextNumber.toString().padStart(9, '0')}`;

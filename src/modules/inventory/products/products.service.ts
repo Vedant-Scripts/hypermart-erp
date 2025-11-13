@@ -117,8 +117,6 @@ export const updateProductService = async ({
 }
 
 export const checkProductExistService = async (field: string, value: string) => {
-    console.log('field: ', field);
-    console.log('value: ', value);
     const checkCount = await getProductCountByFieldRepo(field as keyof Prisma.ProductWhereInput, value);
     return checkCount > 0 ? true : false;
 }

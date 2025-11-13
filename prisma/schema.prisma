@@ -58,11 +58,22 @@ enum EntityType {
 }
 
 enum MovementType {
-  PURCHASE
+  PURCHASE_BILL
   SALE
   RETURN
   ADJUSTMENT_IN
   ADJUSTMENT_OUT
+}
+
+enum PaymentStatus {
+  DONE
+  PENDING
+  FAILED
+}
+
+enum FlatDiscountType {
+  PERCENT
+  RUPEE
 }
 
 // ========================== MODULE : AUTH / USERS ===========================
@@ -335,7 +346,7 @@ model Batch {
 
   // metadata
   supplierId     String? @map("supplier_id")
-  supplierBillId String? @map("supplier_bill_id")
+  purchaseBillId String? @map("purchase_bill_id")
   // add purchaseBillid relation when create that model
 
   // timestamps
@@ -346,27 +357,30 @@ model Batch {
   product       Product?           @relation(fields: [productId], references: [id], onDelete: Cascade)
   variant       Variant?           @relation(fields: [variantId], references: [id], onDelete: Cascade)
   supplier      ContactManagement? @relation(fields: [supplierId], references: [id])
+  purchaseBill  PurchaseBill?      @relation(fields: [purchaseBillId], references: [id])
   StockMovement StockMovement[]
 
+  @@index([purchaseBillId])
   @@map("batch")
 }
 
 model StockMovement {
   id            String       @id @default(cuid())
-  productId     String       @map("product_id")
+  productId     String?      @map("product_id")
   variantId     String?      @map("variant_id")
   batchId       String       @map("batch_id")
   type          MovementType
   qty           Int
+  qtyDelta      Int          @default(0) @map("qty_delta")
   unitPrice     Decimal?     @map("unit_price") @db.Decimal(10, 2)
-  referenceType String?      @map("reference_type") // e.g., "supplier_bill", "sale", "adjustment"
-  referenceId   String?      @map("reference_id") // e.g., supplierBillId or saleId
+  referenceType String?      @map("reference_type") // e.g., "PURCHASE_BILL", "SALE", "ADJUSTMENT"
+  referenceId   String?      @map("reference_id") // e.g., purchaseBillId or saleId
   createdBy     String?      @map("created_by")
   createdAt     DateTime     @default(now())
-  isArchived      Boolean      @default(false) @map("is_archived")
+  isArchived    Boolean      @default(false) @map("is_archived")
 
   //relations
-  product Product  @relation(fields: [productId], references: [id])
+  product Product? @relation(fields: [productId], references: [id])
   variant Variant? @relation(fields: [variantId], references: [id])
   batch   Batch    @relation(fields: [batchId], references: [id])
 
@@ -374,6 +388,33 @@ model StockMovement {
   @@index([variantId])
   @@index([batchId])
   @@map("stock_movement")
+}
+
+// =================================== Purchase Bill ===========================================================
+
+model PurchaseBill {
+  id               String        @id @default(cuid())
+  supplierId       String        @map("supplier_id")
+  purchaseBillDate DateTime      @map("purchase_bill_date")
+  purchaseBillNo   String        @map("purchase_bill_no")
+  paymentStatus    PaymentStatus @default(PENDING) @map("payment_status")
+
+  flatDiscountType FlatDiscountType @default(PERCENT) @map("flat_discount_type")
+  flatDiscount     Decimal          @default(0) @map("flat_discount")
+  grossDiscount    Decimal          @default(0) @map("gross_discount") @db.Decimal(6, 2)
+  discount         Decimal          @default(0) @map("discount") @db.Decimal(6, 2)
+  taxableAmount    Decimal          @default(0) @map("taxable_amount") @db.Decimal(6, 2)
+  tax              Decimal          @default(0) @map("tax") @db.Decimal(6, 2)
+  roundOff         Decimal          @default(0) @map("round_off")
+  netAmount        Decimal          @map("net_amount") @db.Decimal(10, 2)
+  products         Batch[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  supplier ContactManagement @relation(fields: [supplierId], references: [id])
+
+  @@map("purchase_bill")
 }
 
 // =================================== Contact Management ========================================================
@@ -397,10 +438,11 @@ model ContactManagement {
   ifscCode    String? @map("ifsc_code")
   accountName String? @map("account_name")
 
-  status    Status   @default(ACTIVE)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  batch     Batch[]
+  status        Status         @default(ACTIVE)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  batch         Batch[]
+  purchaseBills PurchaseBill[]
 
   @@index([type])
   @@map("contact_management")
