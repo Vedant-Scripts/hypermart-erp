@@ -1,14 +1,14 @@
 import type { Prisma } from "@prisma/client";
 import { generateBarcodeNo } from "../../../common/utils/barcode.utils.js";
 import { pickDefined } from "../../../common/utils/pickDefined.utils.js";
-import { checkProductFieldExistByRepo, createProductsWithRelationsRepo, deleteProductTransactionRepo, deleteVariantTransactionRepo, getAllProductsRepo, getItemCodeFromItemCodeRegistryRepo, getProductByIdRepo, getProductCountByFieldRepo, updateBatchDetailsRepo, updateProductDetailsRepo, updateVariantDetailsRepo } from "./products.repo.js";
-import type { CreateProductDTO, ProductUpdateInput, UpdateBatchDTO, UpdateProductDTO, UpdateVariantDTO } from "./products.type.js";
+import { checkProductFieldExistByRepo, createProductAndVariantRepo, createProductsWithRelationsRepo, deleteProductTransactionRepo, deleteVariantTransactionRepo, getAllProductsRepo, getItemCodeFromItemCodeRegistryRepo, getProductByIdRepo, getProductCountByFieldRepo, updateBatchDetailsRepo, updateProductDetailsRepo, updateVariantDetailsRepo } from "./products.repo.js";
+import type { ContextType, CreateProductDTO, ProductUpdateInput, UpdateBatchDTO, UpdateProductDTO, UpdateVariantDTO } from "./products.type.js";
 
 export const generateBarcodeService = () => {
     return generateBarcodeNo();
 }
 
-export const createProductService = async (data: CreateProductDTO) => {
+export const createProductService = async (data: CreateProductDTO, contextType: ContextType) => {
     const checkProductName = await getProductCountByFieldRepo('productName', data.productName);
     if (checkProductName && checkProductName !== 0) throw new Error('Product Name already exists');
 
@@ -38,7 +38,8 @@ export const createProductService = async (data: CreateProductDTO) => {
             if (checkVariantItemCode && checkVariantItemCode !== 0) throw new Error('Variant Item Code already exists');
         }
     }
-    return createProductsWithRelationsRepo(data);
+    const result = contextType === 'PRODUCT_MODULE' ? createProductsWithRelationsRepo(data) : createProductAndVariantRepo(data);
+    return result;
 }
 
 export const getAllProductsService = async () => {

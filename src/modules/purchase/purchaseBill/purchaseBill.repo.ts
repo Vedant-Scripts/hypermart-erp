@@ -1,7 +1,8 @@
-import { MovementType, PaymentStatus, Prisma, type Batch } from "@prisma/client";
+import { MovementType, Prisma, type Batch } from "@prisma/client";
 import prisma from "../../../common/db.js";
 import type { PurchaseBillCreateInput, PurchaseBillUpdateInput } from "./purchaseBill.type.js"
 import { generateBatchNo } from "../../inventory/products/products.repo.js";
+import type { PrismaClient } from "@prisma/client/extension";
 
 export const createPurchaseBillTransactionRepo = (dto: any) => {
     const data = dto as PurchaseBillCreateInput;
@@ -106,48 +107,70 @@ export const updatePurchaseBillTransactionRepo = (purchaseBillId: string, dto: a
 
         // filtering the data
         for (const product of products) {
-            const existing = existingBatches.find(b => b.id === product.id);
+            const existing = existingBatches.find(b => b.id === product.id); // can be refined  it is O(N)square
 
+            // 1) Completely new batch
             if (!existing) {
-                console.log("[FLOW] check batch");
-                // brand new batch
+                console.log("[FLOW] new batch");
+
                 const { id, ...productWithoutId } = product;
 
                 newBatches.push({
                     ...productWithoutId,
                     supplierId: purchaseBill.supplierId,
                     purchaseBillId,
-                    batchNo: await generateBatchNo(),
-                    receivedQty: product.availableQty
+                    batchNo: await generateBatchNo(), // can be prosimised and generated all at once
+                    receivedQty: product.availableQty ?? 0
                 });
-            } else if (Number(existing.purchasePrice) !== Number(product.purchasePrice) || Number(existing.mrp) !== Number(product.mrp)) {
+                continue;
+            }
+
+            // 2) Price changed (only if client sent new values)
+            const priceChanged =
+                product.purchasePrice !== undefined &&
+                Number(existing.purchasePrice) !== Number(product.purchasePrice);
+
+            const mrpChanged =
+                product.mrp !== undefined &&
+                Number(existing.mrp) !== Number(product.mrp);
+
+            if (priceChanged || mrpChanged) {
                 console.log(
                     `[PRICE CHANGE] existingBatchId=${existing.id} ` +
                     `purchasePrice ${existing.purchasePrice} -> ${product.purchasePrice}, ` +
                     `mrp ${existing.mrp} -> ${product.mrp}`
                 );
+
                 zeroQtyBatchIds.push(existing.id);
 
                 const { id, ...productWithoutId } = product;
+
                 newBatches.push({
                     ...productWithoutId,
                     supplierId: purchaseBill.supplierId,
                     purchaseBillId,
                     batchNo: await generateBatchNo(),
-                    receivedQty: product.availableQty
+                    receivedQty: product.availableQty ?? 0
                 });
 
-            } else {
-                console.log("[FLOW] qty update");
-                const existingQty = existing.availableQty ?? 0;
-                const newQty = product.availableQty ?? 0;
-                const qtyDelta = newQty - existingQty;
-
-                updateExistingBatches.push({
-                    ...product,
-                    qtyDelta
-                });
+                continue;
             }
+
+            // 3) Qty update
+            console.log("[FLOW] qty update");
+
+            let qtyDelta = null;
+
+            if (product.availableQty !== undefined) {
+                const existingQty = existing.availableQty ?? 0;
+                const newQty = product.availableQty;
+                qtyDelta = newQty - existingQty;
+            }
+
+            updateExistingBatches.push({
+                ...product,
+                ...(qtyDelta !== null && { qtyDelta })
+            });
         }
         console.log('newBatches: ', newBatches);
         console.log('zeroQtyBatchIds: ', zeroQtyBatchIds);
@@ -161,8 +184,24 @@ export const updatePurchaseBillTransactionRepo = (purchaseBillId: string, dto: a
                 select: { id: true, productId: true, variantId: true, availableQty: true }
             });
 
+            const zeroMovements = [];
+
             for (const batch of oldBatchData) {
-                await adjustCachedQty(tx, batch, 'decrement', batch.availableQty)
+                if (batch.availableQty <= 0) continue;
+                await adjustCachedQty(tx, batch, 'decrement', batch.availableQty);
+
+                zeroMovements.push({
+                    productId: batch.productId,
+                    variantId: batch.variantId,
+                    batchId: batch.id,
+                    type: MovementType.PURCHASE_BILL,
+                    qty: 0,
+                    qtyDelta: -batch.availableQty,
+                    unitPrice: null,
+                    referenceType: 'QTY_ZEROED',
+                    referenceId: purchaseBillId,
+                    createdBy: null,
+                });
             }
 
             await tx.batch.updateMany({
@@ -170,10 +209,10 @@ export const updatePurchaseBillTransactionRepo = (purchaseBillId: string, dto: a
                 data: { availableQty: 0 }
             });
 
-            await tx.stockMovement.updateMany({
-                where: { batchId: { in: zeroQtyBatchIds } },
-                data: { qty: 0, qtyDelta: 0, referenceType: 'QTY_ZEROED' }
+            await tx.stockMovement.createMany({
+                data: zeroMovements
             });
+
         }
         // new batches
         if (newBatches.length > 0) {
@@ -244,24 +283,18 @@ export const updatePurchaseBillTransactionRepo = (purchaseBillId: string, dto: a
             });
         }
 
-        // const purchaseBillWithProducts = await tx.purchaseBill.findUnique({
-        //     where: { id: purchaseBillId },
-        //     include: {
-        //         products: true
-        //     }
-        // });
-        const purchaseBillWithProducts = await getPurchaseBillByIdRepo(purchaseBillId);
+        const purchaseBillWithProducts = await getPurchaseBillByIdRepo(purchaseBillId, tx);
         return purchaseBillWithProducts;
     });
 };
 
-export const getPurchaseBillByIdRepo = async (purchaseBillId: string) => {
+export const getPurchaseBillByIdRepo = async (purchaseBillId: string, client: Prisma.TransactionClient | PrismaClient = prisma) => {
 
-    const purchaseBill = await prisma.purchaseBill.findUnique({
+    const purchaseBill = await client.purchaseBill.findUnique({
         where: { id: purchaseBillId }
     })
 
-    const batches: Batch[] = await prisma.$queryRaw`
+    const batches: Batch[] = await client.$queryRaw`
     SELECT DISTINCT ON ("product_id", "variant_id") *
     FROM "batch"
     WHERE "purchase_bill_id" = ${purchaseBillId}
@@ -298,7 +331,7 @@ async function adjustCachedQty(
     mode: 'increment' | 'decrement',
     qtyChange: number
 ) {
-    if (qtyChange <= 0) return;
+    if (qtyChange <= 0) return; // can be looked into for batch wise update or create 
 
     if (batch.variantId) {
         const variant = await tx.variant.update({

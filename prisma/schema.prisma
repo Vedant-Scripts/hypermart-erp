@@ -276,8 +276,7 @@ model Product {
   purchaseTaxIncluding Boolean @default(false) @map("purchase_tax_including")
   salesTaxIncluding    Boolean @default(true) @map("sales_tax_including")
 
-  manageMultipleBatch Boolean @default(true) @map("manage_multiple_batch")
-  hasExpiry           Boolean @default(true) @map("has_expiry")
+  hasExpiry Boolean @default(true) @map("has_expiry")
 
   description String? @map("description")
   shortDesc   String? @map("short_desc")
@@ -391,7 +390,6 @@ model StockMovement {
 }
 
 // =================================== Purchase Bill ===========================================================
-
 model PurchaseBill {
   id               String        @id @default(cuid())
   supplierId       String        @map("supplier_id")

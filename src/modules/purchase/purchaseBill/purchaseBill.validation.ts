@@ -23,10 +23,9 @@ const batchSchema = z.object({
     }
 );
 
-const batchUpdateSchema = batchSchema.safeExtend({
-    id: z.string().min(1, { error: "Batch Id needs to be passed" }),
+const batchUpdateSchema = batchSchema.partial().safeExtend({
+    id: z.string().optional(),
 });
-
 export const createPurchaseBillPayloadSchema = z.object({
     supplierId: z.string().min(1, "Supplier ID is required"),
     purchaseBillDate: z.iso.datetime(), // allows date string and converts to Date

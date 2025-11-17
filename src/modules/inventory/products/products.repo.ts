@@ -23,7 +23,6 @@ export const createProductsWithRelationsRepo = (dto: any) => {
                 purchaseTaxIncluding: data.purchaseTaxIncluding ?? false,
                 salesTaxIncluding: data.salesTaxIncluding ?? true,
 
-                manageMultipleBatch: data.manageMultipleBatch ?? true,
                 hasExpiry: data.hasExpiry ?? true,
 
                 description: data.description || null,
@@ -82,13 +81,13 @@ export const createProductsWithRelationsRepo = (dto: any) => {
             if (batch.availableQty > 0) {
                 await tx.stockMovement.create({
                     data: {
-                        productId: product.id,
+                        productId: productId ?? null,
                         variantId: variantId ?? null,
                         batchId: createBatch.id,
                         type: MovementType.ADJUSTMENT_IN,
                         qty: createBatch.availableQty,
                         unitPrice: batch.purchasePrice,
-                        referenceType: 'adjustment',
+                        referenceType: 'ADJUSTMENT',
                         referenceId: null,
                         createdBy: null,
                     }
@@ -110,7 +109,7 @@ export const createProductsWithRelationsRepo = (dto: any) => {
         };
 
         if (data.productType === "SINGLE") {
-            const batches = Array.isArray(data.batch) && data.batch.length ? data.batch : [{}];
+            const batches = Array.isArray(data.batch) ? data.batch : [];
             for (const b of batches) {
                 await createBatchAndStockMovement({
                     productId: product.id,
@@ -122,7 +121,7 @@ export const createProductsWithRelationsRepo = (dto: any) => {
         };
 
         if (data.productType === 'VARIANT') {
-            const variants = Array.isArray(data.variants) && data.variants.length ? data.variants : [{}];
+            const variants = Array.isArray(data.variants) ? data.variants : [];
             for (const v of variants) {
                 const variant = await tx.variant.create({
                     data: {
@@ -157,8 +156,80 @@ export const createProductsWithRelationsRepo = (dto: any) => {
             where: { id: product.id },
             include: {
                 variants: { include: { batch: true } },
-                batch: true,
-                stockMovements: true,
+                batch: true
+            },
+        });
+        return productWithRelations;
+    });
+}
+
+export const createProductAndVariantRepo = (dto: any) => {
+    const data = dto as ProductCreateInput;
+    return prisma.$transaction(async (tx) => {
+        const product = await tx.product.create({
+            data: {
+                itemCode: data.itemCode || null,
+                productName: data.productName,
+                printName: data.printName,
+                productType: data.productType, // "SINGLE" | "VARIANT"
+
+                categoryId: data.categoryId,
+                subcategoryId: data.subcategoryId || null,
+                brandId: data.brandId,
+                unitId: data.unitId,
+                hsnCode: data.hsnCode || null,
+
+                purchaseTax: data.purchaseTax || "0",
+                salesTax: data.salesTax || "0",
+                purchaseTaxIncluding: data.purchaseTaxIncluding ?? false,
+                salesTaxIncluding: data.salesTaxIncluding ?? true,
+
+                hasExpiry: data.hasExpiry ?? true,
+
+                description: data.description || null,
+                shortDesc: data.shortDesc || null,
+
+                cachedQty: 0
+            },
+        });
+
+        if (product.itemCode !== null) {
+            await tx.itemCodeRegistry.create({
+                data: {
+                    itemCode: product.itemCode,
+                    entityType: 'PRODUCT',
+                    entityId: product.id
+                }
+            });
+        }
+
+
+        if (data.productType === 'VARIANT') {
+            const variants = Array.isArray(data.variants) ? data.variants : [];
+            for (const v of variants) {
+                const variant = await tx.variant.create({
+                    data: {
+                        productId: product.id,
+                        itemCode: v.itemCode,
+                        variantName: v.variantName,
+                        cachedQty: 0
+                    }
+                });
+
+                await tx.itemCodeRegistry.create({
+                    data: {
+                        itemCode: variant.itemCode,
+                        entityType: 'VARIANT',
+                        entityId: variant.id
+                    }
+                });
+            };
+        };
+
+        const productWithRelations = await tx.product.findUnique({
+            where: { id: product.id },
+            include: {
+                variants: true,
             },
         });
         return productWithRelations;

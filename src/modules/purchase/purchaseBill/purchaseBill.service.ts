@@ -52,8 +52,10 @@ export const updatePurchaseBillService = async (purchaseBillById: string, data: 
         let pIds: string[] = [];
         let vIds: string[] = [];
         for (const p of data.products) {
-            bIds.push(p.id);
-            if (!p.productId && !p.variantId) continue;
+            if (!p.productId && !p.variantId && !p.id) continue;
+            if (p.id) {
+                bIds.push(p.id);
+            }
             if (p.productId) {
                 pIds.push(p.productId);
             } else if (p.variantId) {
