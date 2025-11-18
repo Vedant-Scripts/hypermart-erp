@@ -1,4 +1,4 @@
-import type { ContactType } from "@prisma/client";
+import type { ContactType, Prisma } from "@prisma/client";
 import prisma from "../../common/db.js";
 import type { ContactCreateInput, ContactUpdateInput } from "./contacts.types.js";
 
@@ -29,3 +29,11 @@ export const getAllContactsByContactTypeRepo = async (contactType: ContactType) 
 export const deleteContactRepo = async (contactId: string) => {
     return await prisma.contactManagement.delete({ where: { id: contactId } });
 };
+
+export const checkContactFieldExistRepo = (field: keyof Prisma.ContactManagementWhereInput, value: string, selectVal: string[]) => {
+    let select: Record<string, boolean> = {}
+    for (const s of selectVal) {
+        select[s] = true;
+    }
+    return prisma.contactManagement.findFirst({ where: { [field]: value }, select });
+}

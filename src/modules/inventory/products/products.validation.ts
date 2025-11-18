@@ -2,8 +2,8 @@ import { ProductType } from "@prisma/client";
 import { z } from "zod/v4";
 
 export const batchPayloadSchema = z.object({
-    mfgDate: z.iso.date().nullable(),
-    expDate: z.iso.date().nullable(),
+    mfgDate: z.iso.datetime().nullable(),
+    expDate: z.iso.datetime().nullable(),
     expDays: z.number().nonnegative().nullable(),
     purchasePrice: z.number().nonnegative(),
     landingCost: z.number().nonnegative(),
@@ -13,13 +13,13 @@ export const batchPayloadSchema = z.object({
     sellingMargin: z.number().nonnegative(),
     availableQty: z.number().int().nonnegative().default(0),
     supplierId: z.string().nullable(),
-    supplierBillId: z.string().nullable(),
+    purchaseBillId: z.string().nullable(),
 });
 
 export const variantPayloadSchema = z.object({
     itemCode: z.string().min(1),
     variantName: z.string().min(1),
-    batch: z.array(batchPayloadSchema),
+    batch: z.array(batchPayloadSchema).nullable(),
 });
 
 
@@ -41,7 +41,6 @@ export const createProductPayloadSchema = z.object({
     purchaseTaxIncluding: z.boolean().default(false),
     salesTaxIncluding: z.boolean().default(true),
 
-    manageMultipleBatch: z.boolean().default(true),
     hasExpiry: z.boolean().default(true),
 
     description: z.string().trim().nullable(),
@@ -53,10 +52,9 @@ export const createProductPayloadSchema = z.object({
     variants: z.array(variantPayloadSchema).nullable(),
 });
 
-// update schema's
+// update schema's 
 export const updateProductPayloadSchema = createProductPayloadSchema.omit({
     productType: true,
-    manageMultipleBatch: true,
     hasExpiry: true,
     batch: true,
     variants: true

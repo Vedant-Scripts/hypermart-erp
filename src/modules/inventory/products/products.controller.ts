@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { batchUpdatePayloadSchema, createProductPayloadSchema, updateProductPayloadSchema, variantUpdatePayloadSchema } from "./products.validation.js";
 import { checkProductExistService, createProductService, deleteProductOrVariantService, generateBarcodeService, getAllProductsService, getProductByIdService, updateProductService } from "./products.service.js";
+import type { ContextType } from "./products.type.js";
 
 
 export const generateBarcodeController = async (req: Request, res: Response, next: NextFunction) => {
@@ -14,12 +15,14 @@ export const generateBarcodeController = async (req: Request, res: Response, nex
 
 export const createProductController = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const contextType = req.query.contextType;
+        if (!contextType && contextType === undefined) throw new Error('Invalid Context Type Passed');
         // validate with zod
         const parsed = createProductPayloadSchema.safeParse(req.body);
         if (!parsed.success) return res.status(400).json({ errors: parsed.error });
 
         // call service
-        const product = await createProductService(parsed.data);
+        const product = await createProductService(parsed.data, contextType as ContextType);
 
         return res.status(201).json({ message: 'Product Created', data: product })
 

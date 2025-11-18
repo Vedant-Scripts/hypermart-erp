@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import type { batchUpdatePayload, CreateProductInput, UpdateProductPayload, variantUpdatePayload } from "./products.validation.js";
 
+export type ContextType = "PRODUCT_MODULE" | "PURCHASE_FLOW";
 // this are for repo usage
 export type ProductCreateInput = Prisma.ProductUncheckedCreateInput;
 export type ProductUpdateInput = Prisma.ProductUpdateInput;

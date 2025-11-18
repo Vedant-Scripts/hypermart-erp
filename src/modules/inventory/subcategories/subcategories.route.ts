@@ -6,7 +6,7 @@ const router = Router();
 
 router.post('/', authenticateUser, createSubcategoryController);
 
-router.get('/', authenticateUser, getAllSubcategoriesController);
+router.get('/data', authenticateUser, getAllSubcategoriesController);
 
 router.get('/check-used', authenticateUser, checkUsedSubcategoryController);
 
