@@ -8,7 +8,7 @@ router.post('/', authenticateUser, createPurchaseBillController);
 
 router.get('/:id', authenticateUser, getPurchaseBillByIdController);
 
-router.get('/', authenticateUser, getAllPurchaseBillController);
+router.get('/data', authenticateUser, getAllPurchaseBillController);
 
 router.patch('/:id', authenticateUser, updatePurchaseBillController);
 

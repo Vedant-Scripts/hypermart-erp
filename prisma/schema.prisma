@@ -154,8 +154,8 @@ model Client {
   name      String
   secret    String?
   users     UserAllowedClient[]
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
+  createdAt DateTime            @default(now()) @map("created_at")
+  updatedAt DateTime            @updatedAt @map("updated_at")
 
   @@map("platform_clients")
 }
@@ -287,8 +287,8 @@ model Product {
   batch          Batch[]
   stockMovements StockMovement[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // relations
   category    Category     @relation(fields: [categoryId], references: [id])
@@ -308,8 +308,8 @@ model Variant {
   itemCode    String @map("item_code")
   variantName String @map("variant_name")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   cachedQty Int @default(0) @map("cached_qty")
 
@@ -349,8 +349,8 @@ model Batch {
   // add purchaseBillid relation when create that model
 
   // timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // relations
   product       Product?           @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -375,7 +375,7 @@ model StockMovement {
   referenceType String?      @map("reference_type") // e.g., "PURCHASE_BILL", "SALE", "ADJUSTMENT"
   referenceId   String?      @map("reference_id") // e.g., purchaseBillId or saleId
   createdBy     String?      @map("created_by")
-  createdAt     DateTime     @default(now())
+  createdAt     DateTime     @default(now()) @map("created_at")
   isArchived    Boolean      @default(false) @map("is_archived")
 
   //relations
@@ -405,7 +405,7 @@ model PurchaseBill {
   tax              Decimal          @default(0) @map("tax") @db.Decimal(6, 2)
   roundOff         Decimal          @default(0) @map("round_off")
   netAmount        Decimal          @map("net_amount") @db.Decimal(10, 2)
-  products         Batch[]
+  batches          Batch[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -420,7 +420,7 @@ model PurchaseBill {
 model ContactManagement {
   id            String      @id @default(cuid())
   type          ContactType
-  name          String?
+  name          String?     @map("name")
   email         String?     @map("email")
   contactNumber String?     @unique @map("contact_number")
   companyName   String?     @map("company_name")
@@ -437,8 +437,8 @@ model ContactManagement {
   accountName String? @map("account_name")
 
   status        Status         @default(ACTIVE)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
   batch         Batch[]
   purchaseBills PurchaseBill[]
 

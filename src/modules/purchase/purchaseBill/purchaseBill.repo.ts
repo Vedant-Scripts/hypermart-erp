@@ -26,11 +26,11 @@ export const createPurchaseBillTransactionRepo = (dto: any) => {
             }
         });
 
-        const products = Array.isArray(data.products) ? data.products : [];
-        if (products.length === 0) return;
+        const batches = Array.isArray(data.batches) ? data.batches : [];
+        if (batches.length === 0) return;
 
         const batchRecords = [];
-        for (const p of products) {
+        for (const p of batches) {
             const batchNo = await generateBatchNo();
             batchRecords.push({
                 ...p,
@@ -72,7 +72,7 @@ export const createPurchaseBillTransactionRepo = (dto: any) => {
         const purchaseBillWithProducts = await tx.purchaseBill.findUnique({
             where: { id: purchaseBill.id },
             include: {
-                products: true
+                batches: true
             }
         });
 
@@ -81,7 +81,7 @@ export const createPurchaseBillTransactionRepo = (dto: any) => {
 };
 
 export const updatePurchaseBillTransactionRepo = (purchaseBillId: string, dto: any) => {
-    const { products: productsArray, ...data } = dto as PurchaseBillUpdateInput;
+    const { batches: batchesArray, ...data } = dto as PurchaseBillUpdateInput;
 
     return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const purchaseBill = await tx.purchaseBill.update({
@@ -90,11 +90,11 @@ export const updatePurchaseBillTransactionRepo = (purchaseBillId: string, dto: a
             },
             data: data,
             include: {
-                products: true
+                batches: true
             }
         });
-        const products = Array.isArray(productsArray) ? productsArray : [];
-        if (products.length === 0) return purchaseBill;
+        const batches = Array.isArray(batchesArray) ? batchesArray : [];
+        if (batches.length === 0) return purchaseBill;
 
         const existingBatches = await tx.batch.findMany({
             where: { purchaseBillId: purchaseBillId },
@@ -106,79 +106,66 @@ export const updatePurchaseBillTransactionRepo = (purchaseBillId: string, dto: a
         const updateExistingBatches: any[] = [];
 
         // filtering the data
-        for (const product of products) {
-            const existing = existingBatches.find(b => b.id === product.id); // can be refined  it is O(N)square
+        for (const batch of batches) {
+            const existing = existingBatches.find(b => b.id === batch.id); // can be refined  it is O(N)square
 
             // 1) Completely new batch
             if (!existing) {
-                console.log("[FLOW] new batch");
 
-                const { id, ...productWithoutId } = product;
+                const { id, ...productWithoutId } = batch;
 
                 newBatches.push({
                     ...productWithoutId,
                     supplierId: purchaseBill.supplierId,
                     purchaseBillId,
                     batchNo: await generateBatchNo(), // can be prosimised and generated all at once
-                    receivedQty: product.availableQty ?? 0
+                    receivedQty: batch.availableQty ?? 0
                 });
                 continue;
             }
 
             // 2) Price changed (only if client sent new values)
             const priceChanged =
-                product.purchasePrice !== undefined &&
-                Number(existing.purchasePrice) !== Number(product.purchasePrice);
+                batch.purchasePrice !== undefined &&
+                Number(existing.purchasePrice) !== Number(batch.purchasePrice);
 
             const mrpChanged =
-                product.mrp !== undefined &&
-                Number(existing.mrp) !== Number(product.mrp);
+                batch.mrp !== undefined &&
+                Number(existing.mrp) !== Number(batch.mrp);
 
             if (priceChanged || mrpChanged) {
-                console.log(
-                    `[PRICE CHANGE] existingBatchId=${existing.id} ` +
-                    `purchasePrice ${existing.purchasePrice} -> ${product.purchasePrice}, ` +
-                    `mrp ${existing.mrp} -> ${product.mrp}`
-                );
-
                 zeroQtyBatchIds.push(existing.id);
 
-                const { id, ...productWithoutId } = product;
+                const { id, ...productWithoutId } = batch;
 
                 newBatches.push({
                     ...productWithoutId,
                     supplierId: purchaseBill.supplierId,
                     purchaseBillId,
                     batchNo: await generateBatchNo(),
-                    receivedQty: product.availableQty ?? 0
+                    receivedQty: batch.availableQty ?? 0
                 });
 
                 continue;
             }
 
             // 3) Qty update
-            console.log("[FLOW] qty update");
-
             let qtyDelta = null;
 
-            if (product.availableQty !== undefined) {
+            if (batch.availableQty !== undefined) {
                 const existingQty = existing.availableQty ?? 0;
-                const newQty = product.availableQty;
+                const newQty = batch.availableQty;
                 qtyDelta = newQty - existingQty;
             }
 
             updateExistingBatches.push({
-                ...product,
+                ...batch,
                 ...(qtyDelta !== null && { qtyDelta })
             });
         }
-        console.log('newBatches: ', newBatches);
-        console.log('zeroQtyBatchIds: ', zeroQtyBatchIds);
-        console.log('updateExistingBatches: ', updateExistingBatches);
 
         // updating zero qty batch ids
         if (zeroQtyBatchIds.length > 0) {
-            console.log("in zero qty");
             const oldBatchData = await tx.batch.findMany({
                 where: { id: { in: zeroQtyBatchIds } },
                 select: { id: true, productId: true, variantId: true, availableQty: true }
@@ -216,7 +203,6 @@ export const updatePurchaseBillTransactionRepo = (purchaseBillId: string, dto: a
         }
         // new batches
         if (newBatches.length > 0) {
-            console.log("in NEW bATCH");
             const newBatchData = await tx.batch.createManyAndReturn({
                 data: newBatches,
                 select: { id: true, productId: true, variantId: true, purchasePrice: true, availableQty: true }
@@ -246,7 +232,6 @@ export const updatePurchaseBillTransactionRepo = (purchaseBillId: string, dto: a
         }
 
         if (updateExistingBatches.length > 0) {
-            console.log("in UPDATE eXISTING bATCHES");
             const newStockMovements: any[] = [];
             for (const batch of updateExistingBatches) {
                 const { qtyDelta, ...batchData } = batch;
@@ -255,10 +240,9 @@ export const updatePurchaseBillTransactionRepo = (purchaseBillId: string, dto: a
                     where: { id: batch.id },
                     data: batchData
                 });
-                console.log('batchData: ', batchData);
 
                 if (!qtyDelta || qtyDelta === 0) continue;
-                console.log("going for  adjustment in existing batches");
+
                 // Determine increment/decrement direction
                 const operationMode: 'increment' | 'decrement' =
                     qtyDelta > 0 ? 'increment' : 'decrement';

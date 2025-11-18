@@ -86,6 +86,7 @@ export const createProductsWithRelationsRepo = (dto: any) => {
                         batchId: createBatch.id,
                         type: MovementType.ADJUSTMENT_IN,
                         qty: createBatch.availableQty,
+                        qtyDelta: createBatch.availableQty,
                         unitPrice: batch.purchasePrice,
                         referenceType: 'ADJUSTMENT',
                         referenceId: null,
@@ -253,8 +254,6 @@ export const getAllProductsRepo = () => {
                 orderBy: { createdAt: 'desc' }
             },
         }
-
-
     });
 }
 

@@ -24,7 +24,7 @@ const batchSchema = z.object({
 );
 
 const batchUpdateSchema = batchSchema.partial().safeExtend({
-    id: z.string().optional(),
+    id: z.string().nullable().optional(),
 });
 export const createPurchaseBillPayloadSchema = z.object({
     supplierId: z.string().min(1, "Supplier ID is required"),
@@ -38,11 +38,11 @@ export const createPurchaseBillPayloadSchema = z.object({
     tax: z.number().nonnegative(),
     roundOff: z.number(),
     netAmount: z.number().nonnegative(),
-    products: z.array(batchSchema)
+    batches: z.array(batchSchema)
 });
 
 export const updatePurchaseBillPayloadSchema = createPurchaseBillPayloadSchema.extend({
-    products: z.array(batchUpdateSchema)
+    batches: z.array(batchUpdateSchema)
 }).partial();
 
 export type CreatePurchaseBillPayloadType = z.infer<typeof createPurchaseBillPayloadSchema>;
