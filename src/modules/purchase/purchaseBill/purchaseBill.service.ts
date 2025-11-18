@@ -11,7 +11,7 @@ export const createPurchaseBillService = async (data: CreatePurchaseBillDTO) => 
 
     let pIds: string[] = [];
     let vIds: string[] = [];
-    for (const p of data.products) {
+    for (const p of data.batches) {
         if (p.productId) {
             pIds.push(p.productId);
         } else {
@@ -47,11 +47,11 @@ export const updatePurchaseBillService = async (purchaseBillById: string, data: 
         if (!checkSupplier) throw new Error("supplier not found");
     }
 
-    if (data.products && data.products.length !== 0) {
+    if (data.batches && data.batches.length !== 0) {
         let bIds: string[] = [];
         let pIds: string[] = [];
         let vIds: string[] = [];
-        for (const p of data.products) {
+        for (const p of data.batches) {
             if (!p.productId && !p.variantId && !p.id) continue;
             if (p.id) {
                 bIds.push(p.id);

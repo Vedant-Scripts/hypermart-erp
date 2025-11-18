@@ -285,7 +285,7 @@ export const getPurchaseBillByIdRepo = async (purchaseBillId: string, client: Pr
     ORDER BY 
       "product_id",
       "variant_id",
-      "createdAt" DESC;
+      "created_at" DESC;
 `;
     return { ...purchaseBill, batches }
 };
