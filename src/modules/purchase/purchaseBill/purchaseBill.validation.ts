@@ -1,4 +1,4 @@
-import { FlatDiscountType, PaymentStatus } from "@prisma/client";
+import { FlatDiscountType, PaymentStatus } from "../../../generated/prisma/client.js";
 import z from "zod";
 
 const batchSchema = z.object({

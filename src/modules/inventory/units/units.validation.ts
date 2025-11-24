@@ -1,4 +1,4 @@
-import { Status } from "@prisma/client";
+import { Status } from "../../../generated/prisma/client.js";
 import { z } from "zod/v4";
 
 export const createUnitSchema = z.object({

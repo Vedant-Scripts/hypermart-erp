@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { updateUserPayloadSchema, UserPayloadSchema } from "./users.validation.js";
 import { checkEmailAndMobileService, createUserService, getUsersByRoleService, getUserByIdService, updateUserService, deleteUserService } from "./users.service.js";
-import { Role } from "@prisma/client";
+import { Role } from "../../generated/prisma/client.js";
 
 export const createUserController = async (req: Request, res: Response, next: NextFunction) => {
     try {

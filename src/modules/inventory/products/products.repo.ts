@@ -1,4 +1,4 @@
-import { EntityType, MovementType, Prisma } from "@prisma/client";
+import { EntityType, MovementType, Prisma } from "../../../generated/prisma/client.js";
 import prisma from "../../../common/db.js";
 import type { BatchUpdateInput, ProductCreateInput, ProductUpdateInput, VariantUpdateInput } from "./products.type.js";
 

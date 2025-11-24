@@ -1,4 +1,4 @@
-import { Role } from "@prisma/client";
+import { Role } from "../../generated/prisma/client.js";
 import { pickDefined } from "../../common/utils/pickDefined.utils.js";
 import type { createUserDTO, updateUserDTO, UserUpdateInput } from "./users.types.js";
 import { createCustomerUserWithRelationsRepo, createUserWithRelationsRepo, deleteUsersWithRelationsRepo, getUserByContactNumberRepo, getUserByEmailRepo, getUserByIdRepo, getUsersByRoleRepo, updateUserRepo } from "./users.repo.js";

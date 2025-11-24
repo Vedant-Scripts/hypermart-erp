@@ -1,8 +1,8 @@
-import { MovementType, Prisma, type Batch } from "@prisma/client";
+import { MovementType, Prisma, type Batch } from "../../../generated/prisma/client.js";
 import prisma from "../../../common/db.js";
 import type { PurchaseBillCreateInput, PurchaseBillUpdateInput } from "./purchaseBill.type.js"
 import { generateBatchNo } from "../../inventory/products/products.repo.js";
-import type { PrismaClient } from "@prisma/client/extension";
+import type { PrismaClient } from "../../../generated/prisma/client.js";
 
 export const createPurchaseBillTransactionRepo = (dto: any) => {
     const data = dto as PurchaseBillCreateInput;
