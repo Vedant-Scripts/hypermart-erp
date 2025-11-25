@@ -30,7 +30,7 @@
     // "noPropertyAccessFromIndexSignature": true,
     // Recommended Options
     "strict": true,
-    "esModuleInterop": true, 
+    "esModuleInterop": true,
     "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
@@ -38,4 +38,10 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
   },
+  "exclude": [
+    "dist",
+    "node_modules",
+    "prisma.config.ts",
+    "prisma"
+  ]
 }

@@ -1,4 +1,4 @@
-import type { Prisma } from "../../generated/prisma/client.js";
+import type { Prisma } from "../../../generated/prisma/client.js";
 import type { CreateBrandInput, UpdateBrandInput } from "./brands.validation.js";
 
 // this are for repo usage

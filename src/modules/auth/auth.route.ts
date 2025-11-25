@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { signInController, refreshTokenController, forgotPasswordController, changePasswordController, resetPasswordController, sendOtpController } from './auth.controller.js';
 import { authenicateClient, authenticateUser } from '../../common/auth/guards.auth.js';
 
-const router = Router();
+
+const router: IRouter = Router();
 
 router.post('/send-otp', sendOtpController);
 
