@@ -1,4 +1,4 @@
-import express from 'express';
+import express, {type Express} from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -11,7 +11,7 @@ import { userRouter } from './modules/users/index.js';
 import { authenicateClient } from './common/auth/guards.auth.js';
 import { purchaseBillRouter } from './modules/purchase/index.js';
 
-const app = express();
+const app: Express = express();
 
 // Middleware Setup
 app.use(express.json());

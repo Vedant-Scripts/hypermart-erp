@@ -1,4 +1,4 @@
-import type { ContactType, Prisma, Status } from "@prisma/client";
+import type { ContactType, Prisma, Status } from "../../generated/prisma/client.js";
 import type { CreateContactInput, UpdateContactInput } from "./contacts.validation.js";
 
 // this for repo usage

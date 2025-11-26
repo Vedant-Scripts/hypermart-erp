@@ -1,4 +1,4 @@
-import type { ContactType, Prisma } from "@prisma/client";
+import type { ContactType, Prisma } from "../../generated/prisma/client.js";
 import prisma from "../../common/db.js";
 import type { ContactCreateInput, ContactUpdateInput } from "./contacts.types.js";
 

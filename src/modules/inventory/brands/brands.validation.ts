@@ -1,5 +1,5 @@
 import { z } from "zod/v4";
-import { Status } from "@prisma/client";
+import { Status } from "../../../generated/prisma/client.js";
 
 export const createBrandSchema = z.object({
     name: z.string().trim().toUpperCase().min(1, { error: "Brand name is required" }),

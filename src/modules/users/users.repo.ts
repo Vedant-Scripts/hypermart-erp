@@ -1,4 +1,4 @@
-import type { Role } from "@prisma/client";
+import type { Role } from "../../generated/prisma/client.js";
 import { ROLE_TO_CLIENT } from "../../common/utils/constant.js";
 import prisma from "../../common/db.js"
 import { hashPassword } from "../../common/utils/password.utils.js";

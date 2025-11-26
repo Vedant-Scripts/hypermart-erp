@@ -11,6 +11,7 @@ let server: Server;
 async function startServer() {
     try {
         await prisma.$connect();
+        await prisma.$queryRaw`SELECT 1`;
         console.log('Database Connected');
         await redis.connect();
         console.log('Redis Connected');

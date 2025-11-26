@@ -1,4 +1,3 @@
-import type { Prisma } from "@prisma/client";
 import { pickDefined } from "../../../common/utils/pickDefined.utils.js";
 import { checkContactFieldExistRepo } from "../../contacts/contacts.repo.js";
 import { checkBatchCountsRepo, checkFieldsInItemCodeRegistryRepo, deleteProductTransactionRepo } from "../../inventory/products/products.repo.js";

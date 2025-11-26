@@ -1,4 +1,4 @@
-import { ContactType, Status } from "@prisma/client";
+import { ContactType, Status } from "../../generated/prisma/client.js";
 import { z } from "zod";
 
 export const createContactSchema = z.object({

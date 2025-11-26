@@ -8,7 +8,7 @@ import { delRedisValue, getRedisValue, setRedisValue } from "../../common/integr
 import type { Response } from "express";
 import { generateOTP, sendOtpToMobile, storeOtpRedis, verifyOtpRedis } from "../../common/utils/otp.utils.js";
 import { createCustomerUserService } from "../users/users.service.js";
-import type { User } from "@prisma/client";
+import type { User } from "../../generated/prisma/client.js";
 
 export const sendOtpService = async (sendOtpInput: SignInReqType) => {
 

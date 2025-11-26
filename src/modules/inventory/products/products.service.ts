@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "../../../generated/prisma/client.js";
 import { generateBarcodeNo } from "../../../common/utils/barcode.utils.js";
 import { pickDefined } from "../../../common/utils/pickDefined.utils.js";
 import { checkProductFieldExistByRepo, createProductAndVariantRepo, createProductsWithRelationsRepo, deleteProductTransactionRepo, deleteVariantTransactionRepo, getAllProductsRepo, getItemCodeFromItemCodeRegistryRepo, getProductByIdRepo, getProductCountByFieldRepo, updateBatchDetailsRepo, updateProductDetailsRepo, updateVariantDetailsRepo } from "./products.repo.js";

@@ -1,4 +1,4 @@
-import type { Prisma, User, EmployeeProfile } from "@prisma/client";
+import type { Prisma, User, EmployeeProfile } from "../../generated/prisma/client.js";
 
 
 export type UserWithProfile = Prisma.UserGetPayload<{
