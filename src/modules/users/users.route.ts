@@ -1,8 +1,9 @@
-import { Router } from "express";
+import { Router, type IRouter } from "express";
 import { authenticateUser } from "../../common/auth/guards.auth.js";
 import { checkEmailAndMobileController, createUserController, getUsersByController, getUserByIdController, updateUserController, deleteUserController } from "./users.controller.js";
 
-const router = Router();
+
+const router: IRouter = Router();
 
 router.post('/', authenticateUser, createUserController);
 

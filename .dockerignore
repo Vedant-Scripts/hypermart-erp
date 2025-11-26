@@ -1,0 +1,21 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+
+# Environment variables
+.env
+.env.*
+
+# Git
+.gitignore
+
+
+# Docker files not needed inside image
+docker-compose.yaml
+docker-compose.yml
+
+
+# Ignore generated Prisma client
+/src/generated/prisma

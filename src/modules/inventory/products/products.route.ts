@@ -1,8 +1,9 @@
-import { Router } from "express";
+import { Router, type IRouter } from "express";
 import { authenticateUser } from "../../../common/auth/guards.auth.js";
 import { checkProductExistController, createProductController, generateBarcodeController, getAllProductsController, getProductByIdController, updateProductsByController } from "./products.controller.js";
 
-const router = Router();
+
+const router: IRouter = Router();
 
 router.get('/generate-barcode', authenticateUser, generateBarcodeController)
 

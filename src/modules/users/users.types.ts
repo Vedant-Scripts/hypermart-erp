@@ -1,4 +1,4 @@
-import type { Gender, Prisma, Role, Status } from "@prisma/client";
+import type { Gender, Prisma, Role, Status } from "../../generated/prisma/client.js";
 import type { CreateUserType, UpdateUserType } from "./users.validation.js";
 
 // this for repo usage

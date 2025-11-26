@@ -1,4 +1,4 @@
-import { Gender, Role, Shift, Status } from "@prisma/client";
+import { Gender, Role, Shift, Status } from "../../generated/prisma/client.js";
 import { z } from "zod";
 
 const EmployeeProfileSchema = z.object({

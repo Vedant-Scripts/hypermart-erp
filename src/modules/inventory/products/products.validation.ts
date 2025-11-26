@@ -1,4 +1,4 @@
-import { ProductType } from "@prisma/client";
+import { ProductType } from "../../../generated/prisma/client.js";
 import { z } from "zod/v4";
 
 export const batchPayloadSchema = z.object({

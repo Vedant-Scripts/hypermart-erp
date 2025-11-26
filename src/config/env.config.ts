@@ -1,8 +1,15 @@
 import { config as loadEnv } from "dotenv";
-import { parse } from "path";
 import { z } from "zod/v4";
 
-loadEnv(); // loading env into process.env
+if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "staging") {
+    console.log('process.env.NODE_ENV: ', process.env.NODE_ENV);
+    const envFile =
+        process.env.NODE_ENV === "staging"
+            ? ".env.staging"
+            : ".env.dev";
+
+    loadEnv({ path: envFile });
+}
 
 const envSchema = z.object({
     NODE_ENV: z.enum(["development", "staging", "production"]).default("development"),

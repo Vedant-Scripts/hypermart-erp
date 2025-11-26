@@ -1,0 +1,26 @@
+services:
+  basketfull-db:
+    image: postgres:18
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: basketfull_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+  basketfull-backend:
+    build: .
+    depends_on:
+      - basketfull-db
+    env_file:
+      - .env.dev
+    ports:
+      - "5000:5000"
+    command: ["pnpm", "start"]
+    
+
+volumes:
+  pgdata:
+    external: true

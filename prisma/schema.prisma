@@ -5,12 +5,12 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // =============================== ENUMS =========================================
@@ -435,13 +435,14 @@ model ContactManagement {
   branchName  String? @map("branch_name")
   ifscCode    String? @map("ifsc_code")
   accountName String? @map("account_name")
+  accountNumber String? @map("account_number")
 
   status        Status         @default(ACTIVE)
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
   batch         Batch[]
   purchaseBills PurchaseBill[]
-
+    
   @@index([type])
   @@map("contact_management")
 }
