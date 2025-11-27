@@ -24,7 +24,7 @@ app.use(helmet());
 app.use(morgan('dev'));
 
 app.get('/', (req, res) => {
-    res.send('BasketFull backend is running on EC2 server...');
+    res.send('HyperMart backend is running on EC2 server...');
 });
 
 app.use(authenicateClient); // client platform mandatory checking 

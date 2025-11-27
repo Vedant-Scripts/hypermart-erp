@@ -1,6 +1,6 @@
-# BasketFull ERP Backend
+# HyperMart ERP Backend
 
-A modular, production-ready backend for BasketFull ERP, designed for inventory, purchase, user, and contact management. Built with Node.js, TypeScript, Express, and Prisma, it provides robust APIs for retail and business operations, with secure authentication, role-based access, and scalable architecture.
+A modular, production-ready backend for HyperMart ERP, designed for inventory, purchase, user, and contact management. Built with Node.js, TypeScript, Express, and Prisma, it provides robust APIs for retail and business operations, with secure authentication, role-based access, and scalable architecture.
 
 ---
 
@@ -101,8 +101,8 @@ Set these in your `.env.dev` (see example in repo):
 ### 1. Clone the Repository
 
 ```sh
-git clone https://github.com/Dev-Basketfull/basketfull-erp-backend.git
-cd basketfull-erp-backend
+git clone https://github.com/Vedant-Scripts/hypermart-erp.git
+cd hypermart-erp
 ```
 
 ### 2. Install Dependencies
@@ -200,4 +200,4 @@ MIT
 
 ## Contact
 
-For support or inquiries, contact the BasketFull team at [Dev-Basketfull](https://github.com/Dev-Basketfull).
+For support or inquiries, contact the HyperMart team at (https://github.com/Vedant-Scripts).
