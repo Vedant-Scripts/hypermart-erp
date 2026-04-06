@@ -1,4 +1,16 @@
-# HyperMart ERP Backend
+## ⚠️ Setup Requirements
+
+This ERP prototype is not runnable out of the box.
+
+It requires:
+- PostgreSQL database setup
+- Environment variables configuration
+- (Optional) message queue / background services (if applicable)
+
+Due to these dependencies not being bundled in the repository, additional setup is required before running the project.
+
+
+### HyperMart ERP Backend
 
 A modular, production-ready backend for HyperMart ERP, designed for inventory, purchase, user, and contact management. Built with Node.js, TypeScript, Express, and Prisma, it provides robust APIs for retail and business operations, with secure authentication, role-based access, and scalable architecture.
 
